@@ -1,0 +1,43 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Python / Backend
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.ipynb_checkpoints/
+backend/__pycache__/
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/.env
+backend/.venv/
+backend/venv/
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/.env
+
+# Local models (vit_h_4b8939.pth, etc. can be too large for standard git)
+backend/models/*.pth
+backend/models/*.bin
+backend/models/*.onnx
+
+# Docker
+docker/data/
