@@ -46,6 +46,7 @@ export interface AnalysisResult {
   embedding_id: string | null;
   algorithm_pattern?: string | null;
   complexity?: Complexity;
+  language?: string;
   error?: string;
 }
 

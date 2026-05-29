@@ -55,6 +55,11 @@ class ConnectionManager:
     def __init__(self):
         # {job_id: [WebSocket, WebSocket, ...]}
         self.active_connections: Dict[str, List[WebSocket]] = {}
+        # Simple in-memory cache for results and errors to prevent race conditions
+        # if a job completes before the websocket has finished connecting.
+        self.job_results: Dict[str, dict] = {}
+        self.job_errors: Dict[str, str] = {}
+        self.job_progress: Dict[str, dict] = {}
 
     async def connect(self, websocket: WebSocket, job_id: str):
         """Accept a new WebSocket connection and register it."""
@@ -68,12 +73,41 @@ class ConnectionManager:
                  f"total_for_job={len(self.active_connections[job_id])}")
         
         # Send welcome message
-        await self.send_to_job(job_id, {
+        await websocket.send_json({
             "event": "connected",
             "job_id": job_id,
             "message": "Connected! Listening for analysis updates...",
             "progress": 0,
         })
+
+        # Immediately reply with the cached result if the job is already complete
+        if job_id in self.job_results:
+            log.info(f"⚡ Job {job_id[:8]}... already finished. Sending cached result.")
+            await websocket.send_json({
+                "event": "result",
+                "job_id": job_id,
+                "progress": 100,
+                "data": self.job_results[job_id],
+                "message": "Analysis complete!",
+            })
+        elif job_id in self.job_errors:
+            log.info(f"⚡ Job {job_id[:8]}... already failed. Sending cached error.")
+            await websocket.send_json({
+                "event": "error",
+                "job_id": job_id,
+                "progress": -1,
+                "message": f"Analysis failed: {self.job_errors[job_id]}",
+            })
+        elif job_id in self.job_progress:
+            # Send latest progress
+            prog = self.job_progress[job_id]
+            await websocket.send_json({
+                "event": "progress",
+                "job_id": job_id,
+                "stage": prog["stage"],
+                "progress": prog["progress"],
+                "message": prog["message"],
+            })
 
     def disconnect(self, websocket: WebSocket, job_id: str):
         """Remove a WebSocket connection."""
@@ -109,6 +143,11 @@ class ConnectionManager:
 
     async def send_progress(self, job_id: str, stage: str, progress: int, message: str):
         """Send a progress update event."""
+        self.job_progress[job_id] = {
+            "stage": stage,
+            "progress": progress,
+            "message": message,
+        }
         await self.send_to_job(job_id, {
             "event": "progress",
             "job_id": job_id,
@@ -119,6 +158,8 @@ class ConnectionManager:
 
     async def send_result(self, job_id: str, result: dict):
         """Send the final analysis result."""
+        self.job_results[job_id] = result
+        self.job_progress.pop(job_id, None)
         await self.send_to_job(job_id, {
             "event": "result",
             "job_id": job_id,
@@ -129,6 +170,8 @@ class ConnectionManager:
 
     async def send_error(self, job_id: str, error: str):
         """Send an error event."""
+        self.job_errors[job_id] = error
+        self.job_progress.pop(job_id, None)
         await self.send_to_job(job_id, {
             "event": "error",
             "job_id": job_id,

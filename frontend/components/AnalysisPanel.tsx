@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Code2, FileText, Layers, Search, Database, Copy, Check, Loader2, ArrowRight, Eye, EyeOff, Cpu, Zap } from "lucide-react";
 import { AnalysisResult, PipelineProgress } from "@/types";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 type Tab = "explain" | "code" | "elements" | "similar" | "json";
 
@@ -286,9 +288,21 @@ export default function AnalysisPanel({ result, progress, analyzing, previewUrl 
                           {copied ? <><Check size={11} /> Copied!</> : <><Copy size={11} /> Copy</>}
                         </button>
                       </div>
-                      <pre className="p-4 text-xs overflow-x-auto" style={{ color: "#e6edf3", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.7 }}>
-                        <code>{result.generated_code}</code>
-                      </pre>
+                      <div className="overflow-x-auto text-[13px] bg-[#0d1117]/60">
+                        <SyntaxHighlighter
+                          language={result.language || "python"}
+                          style={vscDarkPlus}
+                          customStyle={{
+                            background: "transparent",
+                            padding: "16px",
+                            fontSize: "12px",
+                            margin: 0,
+                            fontFamily: "'JetBrains Mono', monospace",
+                          }}
+                        >
+                          {result.generated_code}
+                        </SyntaxHighlighter>
+                      </div>
                     </div>
                     {result.code_explanation && (
                       <div className="p-4 rounded-xl" style={{ background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.12)" }}>

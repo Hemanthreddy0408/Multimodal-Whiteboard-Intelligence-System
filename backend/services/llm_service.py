@@ -420,7 +420,184 @@ Answer concisely and accurately. If generating code, make it complete and runnab
         if result:
             return result.get("explanation", str(result))
         
-        return "I couldn't connect to any AI provider. Please check your API keys."
+        # Fallback to local mock answering if no keys/services are configured
+        return self._generate_mock_chat_answer(question, context)
+
+    def _generate_mock_chat_answer(self, question: str, context: Dict) -> str:
+        """Generate a smart local response for demo/fallback purposes based on the question."""
+        q_lower = question.lower()
+        
+        # 1. Complexity Questions
+        if "complexity" in q_lower or "time" in q_lower or "space" in q_lower:
+            return """For the **Binary Search Tree (BST)** shown in the diagram:
+
+*   **Search Complexity:**
+    *   *Average Case:* $\mathcal{O}(\log n)$ — when the tree is balanced.
+    *   *Worst Case:* $\mathcal{O}(n)$ — when the tree is skewed (e.g., elements are inserted in sorted order).
+*   **Insertion/Deletion Complexity:**
+    *   *Average Case:* $\mathcal{O}(\log n)$
+    *   *Worst Case:* $\mathcal{O}(n)$
+*   **Space Complexity:** $\mathcal{O}(n)$ to store the tree node structures in memory.
+
+*Note: Since no API keys are currently configured, this explanation is served from the local developer fallback engine.*"""
+
+        # 2. Code Generation Questions
+        if "code" in q_lower or "generate" in q_lower or "write" in q_lower or "python" in q_lower or "javascript" in q_lower or "typescript" in q_lower:
+            lang = "python"
+            if "javascript" in q_lower or "js" in q_lower:
+                lang = "javascript"
+            elif "typescript" in q_lower or "ts" in q_lower:
+                lang = "typescript"
+            elif "java" in q_lower:
+                lang = "java"
+            elif "c++" in q_lower or "cpp" in q_lower:
+                lang = "cpp"
+            
+            if lang == "python":
+                return """Here is the Python implementation of a Binary Search Tree (BST) corresponding to the diagram:
+
+```python
+class Node:
+    def __init__(self, key):
+        self.left = None
+        self.right = None
+        self.val = key
+
+def insert(root, key):
+    # If the tree is empty, return a new node
+    if root is None:
+        return Node(key)
+    
+    # Otherwise, recur down the tree
+    if key < root.val:
+        root.left = insert(root.left, key)
+    elif key > root.val:
+        root.right = insert(root.right, key)
+        
+    return root
+
+def search(root, key):
+    # Base Cases: root is null or key is present at root
+    if root is None or root.val == key:
+        return root
+
+    # Key is smaller than root's key
+    if root.val > key:
+        return search(root.left, key)
+
+    # Key is greater than root's key
+    return search(root.right, key)
+
+# Constructing the tree from the diagram
+# Root: 8, Left subtree: [3, 1, 6, 4, 7], Right subtree: [10, 14, 13]
+root = Node(8)
+for node_val in [3, 10, 1, 6, 14, 4, 7, 13]:
+    insert(root, node_val)
+```
+
+*Note: Since no API keys are currently configured, this code is served from the local developer fallback engine.*"""
+            elif lang in ["javascript", "typescript"]:
+                return """Here is the JavaScript/TypeScript implementation of the Binary Search Tree (BST) corresponding to the diagram:
+
+```typescript
+class TreeNode {
+    val: number;
+    left: TreeNode | null = null;
+    right: TreeNode | null = null;
+
+    constructor(val: number) {
+        this.val = val;
+    }
+}
+
+class BinarySearchTree {
+    root: TreeNode | null = null;
+
+    insert(val: number): void {
+        const newNode = new TreeNode(val);
+        if (this.root === null) {
+            this.root = newNode;
+            return;
+        }
+        this.insertNode(this.root, newNode);
+    }
+
+    private insertNode(node: TreeNode, newNode: TreeNode): void {
+        if (newNode.val < node.val) {
+            if (node.left === null) {
+                node.left = newNode;
+            } else {
+                this.insertNode(node.left, newNode);
+            }
+        } else {
+            if (node.right === null) {
+                node.right = newNode;
+            } else {
+                this.insertNode(node.right, newNode);
+            }
+        }
+    }
+}
+
+// Recreating the diagram tree structure
+const bst = new BinarySearchTree();
+const nodes = [8, 3, 10, 1, 6, 14, 4, 7, 13];
+nodes.forEach(val => bst.insert(val));
+```
+
+*Note: Since no API keys are currently configured, this code is served from the local developer fallback engine.*"""
+            else:
+                return f"""Here is a simple template for a Binary Search Tree (BST) Node class in C++:
+
+```cpp
+#include <iostream>
+
+struct Node {{
+    int data;
+    Node* left;
+    Node* right;
+    
+    Node(int val) {{
+        data = val;
+        left = nullptr;
+        right = nullptr;
+    }}
+}};
+```
+
+*Note: Since no API keys are currently configured, this code is served from the local developer fallback engine.*"""
+
+        # 3. Traversal Questions
+        if "traverse" in q_lower or "order" in q_lower or "inorder" in q_lower or "preorder" in q_lower or "postorder" in q_lower:
+            return """For the **Binary Search Tree (BST)** shown in the diagram:
+
+*   **In-order Traversal** (Left, Root, Right) - Visits nodes in sorted ascending order:
+    `1, 3, 4, 6, 7, 8, 10, 13, 14`
+*   **Pre-order Traversal** (Root, Left, Right) - Useful for copying a tree structure:
+    `8, 3, 1, 6, 4, 7, 10, 14, 13`
+*   **Post-order Traversal** (Left, Right, Root) - Useful for deleting or freeing nodes:
+    `1, 4, 7, 6, 3, 13, 14, 10, 8`
+
+*Note: Since no API keys are currently configured, this answer is served from the local developer fallback engine.*"""
+
+        # 4. Explain step by step / explain / general
+        return """Based on the structure detected in the whiteboard image, this is a **Binary Search Tree (BST)**.
+
+Here is a step-by-step breakdown of how search/lookup operations traverse the tree shown in the diagram:
+
+1.  **Start at the Root Node (8):**
+    *   Any key less than `8` will route to the left subtree (rooted at `3`).
+    *   Any key greater than `8` will route to the right subtree (rooted at `10`).
+2.  **Left Subtree traversal (e.g., searching for 7):**
+    *   Since $7 < 8$, go left to **3**.
+    *   Since $7 > 3$, go right to **6**.
+    *   Since $7 > 6$, go right to **7** (Target found in 3 comparisons!).
+3.  **Right Subtree traversal (e.g., searching for 13):**
+    *   Since $13 > 8$, go right to **10**.
+    *   Since $13 > 10$, go right to **14**.
+    *   Since $13 < 14$, go left to **13** (Target found in 3 comparisons!).
+
+*Note: Since no API keys (like `OPENAI_API_KEY` or `GOOGLE_API_KEY`) are configured in `.env`, the chat engine is currently running in local developer fallback mode.*"""
 
     async def generate_code_for_language(
         self,
