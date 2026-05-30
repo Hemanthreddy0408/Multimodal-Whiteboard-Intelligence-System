@@ -106,37 +106,38 @@ export default function PricingPage() {
 
         {/* Toggle billing switch */}
         <div className="flex items-center justify-center gap-3">
-          <span className={`text-xs font-semibold ${!annual ? "text-theme-primary" : "text-theme-muted"}`}>Monthly</span>
+          <span className={`text-xs font-semibold ${!annual ? "text-theme-primary" : "text-theme-secondary"}`}>Monthly</span>
           <button 
             onClick={() => setAnnual(p => !p)}
-            className="w-12 h-6 rounded-full bg-white/10 p-0.5 relative transition-all duration-300 cursor-pointer"
+            className="w-12 h-6 rounded-full bg-white/5 border border-white/10 p-0.5 relative transition-all duration-300 cursor-pointer hover:border-white/25"
+            style={{ boxShadow: "0 0 10px rgba(255,255,255,0.02)" }}
           >
-            <div className={`w-5 h-5 rounded-full bg-[#7C3AED] transition-all duration-300 ${annual ? "translate-x-6" : ""}`} />
+            <div className={`w-4 h-4 rounded-full bg-[var(--violet)] transition-all duration-300 ${annual ? "translate-x-6" : ""}`} />
           </button>
           <div className="flex items-center gap-1.5">
-            <span className={`text-xs font-semibold ${annual ? "text-theme-primary" : "text-theme-muted"}`}>Annually</span>
-            <span className="px-2 py-0.5 rounded-full bg-[#06B6D4]/10 border border-[#06B6D4]/20 text-[9px] font-bold text-[#06B6D4]">
+            <span className={`text-xs font-semibold ${annual ? "text-theme-primary" : "text-theme-secondary"}`}>Annually</span>
+            <span className="px-2.5 py-0.5 rounded-full bg-[var(--indigo)]/10 border border-[var(--indigo)]/20 text-[9px] font-bold text-[var(--indigo)]">
               Save 20%
             </span>
           </div>
         </div>
 
         {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto pt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto pt-8 items-stretch">
           {plans.map((p, idx) => (
             <div 
               key={idx} 
-              className="p-8 rounded-2xl border text-left flex flex-col justify-between relative transition-all slide-up hover:scale-[1.02]"
+              className="p-8 rounded-2xl border text-left flex flex-col justify-between relative transition-all duration-300 hover:-translate-y-1"
               style={{
-                background: "rgba(12,12,26,0.7)",
-                borderColor: p.featured ? "rgba(124,58,237,0.5)" : "rgba(255,255,255,0.06)",
-                boxShadow: p.featured ? "0 10px 40px rgba(124,58,237,0.15), 0 0 0 1px rgba(124,58,237,0.2)" : "0 10px 30px rgba(0,0,0,0.3)",
-                backdropFilter: "blur(12px)",
-                animationDelay: `${idx * 0.08}s`
+                background: "rgba(10,10,26,0.6)",
+                borderColor: p.featured ? "rgba(255,0,122,0.4)" : "var(--card-border)",
+                boxShadow: p.featured ? "0 15px 40px rgba(255,0,122,0.15), inset 0 1px 0 rgba(255,255,255,0.08)" : "0 15px 35px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
+                backdropFilter: "blur(20px)",
+                animation: `slide-up 0.4s cubic-bezier(0.34,1.56,0.64,1) ${idx * 0.08}s both`
               }}
             >
               {p.featured && (
-                <span className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 rounded-full bg-[#7C3AED] text-[9px] font-black uppercase text-white tracking-widest flex items-center gap-1">
+                <span className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--pink)] text-[9px] font-black uppercase text-white tracking-widest flex items-center gap-1 shadow-lg shadow-pink-500/20">
                   <Star size={9} className="fill-white" /> Most Popular
                 </span>
               )}
@@ -145,8 +146,8 @@ export default function PricingPage() {
                 <div>
                   <h3 className="text-sm font-bold text-theme-secondary uppercase tracking-wider">{p.name}</h3>
                   <div className="flex items-baseline gap-1 mt-2">
-                    <span className="text-3xl font-black text-theme-primary">{p.price}</span>
-                    <span className="text-xs text-theme-muted">{p.price !== "Custom" ? "/month" : ""}</span>
+                    <span className="text-4xl font-black text-theme-primary">{p.price}</span>
+                    <span className="text-xs text-theme-secondary">{p.price !== "Custom" ? "/month" : ""}</span>
                   </div>
                   <p className="text-xs text-theme-secondary mt-2 min-h-[32px]">{p.desc}</p>
                 </div>
@@ -154,8 +155,8 @@ export default function PricingPage() {
                 <div className="border-t border-theme pt-6 space-y-4">
                   {p.features.map((f, i) => (
                     <div key={i} className="flex items-start gap-2.5">
-                      <Check size={14} className="text-[#06B6D4] mt-0.5 flex-shrink-0" />
-                      <span className="text-xs text-slate-300 leading-normal">{f}</span>
+                      <Check size={14} className="text-[var(--cyan)] mt-0.5 flex-shrink-0" />
+                      <span className="text-xs text-theme-secondary leading-normal">{f}</span>
                     </div>
                   ))}
                 </div>
@@ -164,10 +165,10 @@ export default function PricingPage() {
               <div className="pt-8">
                 <Link 
                   href={p.href}
-                  className={`btn text-center font-bold text-xs py-3 rounded-xl w-full block transition-all cursor-pointer ${
+                  className={`btn text-center font-bold text-xs py-3 rounded-xl w-full block transition-all duration-300 cursor-pointer ${
                     p.featured 
-                      ? "bg-gradient-to-tr from-[#7C3AED] to-[#8B5CF6] text-white shadow-lg shadow-[#7C3AED]/20 hover:brightness-110" 
-                      : "border border-theme text-theme-secondary hover:bg-white/5"
+                      ? "bg-gradient-to-tr from-[var(--indigo)] to-[var(--cyan)] text-black shadow-lg shadow-cyan-500/20 hover:scale-[1.02] hover:brightness-110" 
+                      : "border border-theme text-theme-secondary hover:bg-white/5 hover:text-theme-primary"
                   }`}
                 >
                   {p.cta}
@@ -181,7 +182,7 @@ export default function PricingPage() {
       {/* FAQ Accordion Section */}
       <section className="py-24 px-4 max-w-3xl mx-auto w-full space-y-12 z-10">
         <div className="text-center space-y-3">
-          <HelpCircle className="text-[#7C3AED] mx-auto" size={32} />
+          <HelpCircle className="text-[var(--violet)] mx-auto" size={32} />
           <h2 className="text-2xl font-bold tracking-tight text-theme-primary">Frequently Asked Questions</h2>
           <p className="text-xs text-theme-muted">Need help with something else? Reach out to support@whiteboardai.com.</p>
         </div>

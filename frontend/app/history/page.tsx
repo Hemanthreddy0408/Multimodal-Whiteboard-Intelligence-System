@@ -122,10 +122,10 @@ export default function HistoryPage() {
   };
 
   const stats = [
-    { label: "Total Sessions", val: totalSessions, sub: "all time", icon: Database, color: "#8b5cf6" },
-    { label: "This Month", val: thisMonthCount, sub: "billing cycle", icon: Calendar, color: "#22d3ee" },
-    { label: "Top Language", val: getMostUsedLang(), sub: "auto-detected", icon: BookOpen, color: "#f59e0b" },
-    { label: "Avg Confidence", val: `${getAvgConfidence()}%`, sub: "OCR/DINOv2 model", icon: HelpCircle, color: "#10b981" }
+    { label: "Total Sessions", val: totalSessions, sub: "all time", icon: Database, color: "var(--violet)" },
+    { label: "This Month", val: thisMonthCount, sub: "billing cycle", icon: Calendar, color: "var(--indigo)" },
+    { label: "Top Language", val: getMostUsedLang(), sub: "auto-detected", icon: BookOpen, color: "var(--amber)" },
+    { label: "Avg Confidence", val: `${getAvgConfidence()}%`, sub: "OCR/DINOv2 model", icon: HelpCircle, color: "var(--cyan)" }
   ];
 
   return (
@@ -250,7 +250,7 @@ export default function HistoryPage() {
           >
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Loader2 size={24} className="spin text-[#7C3AED]" />
+                <Loader2 size={24} className="spin text-[var(--violet)]" />
                 <p className="text-xs text-theme-secondary font-semibold">Querying PostgreSQL transaction log...</p>
               </div>
             ) : filteredItems.length === 0 ? (
@@ -262,7 +262,7 @@ export default function HistoryPage() {
                   <h3 className="text-sm font-bold text-theme-primary">No sessions match your search</h3>
                   <p className="text-xs text-theme-secondary max-w-xs mx-auto">Try altering your language tags or start drawing a new diagram!</p>
                 </div>
-                <Link href="/" className="btn bg-[#7C3AED] hover:brightness-110 text-white font-bold text-xs px-4 py-2.5 rounded-xl inline-flex items-center gap-1 shadow-lg shadow-[#7C3AED]/20">
+                <Link href="/" className="btn bg-gradient-to-tr from-[var(--indigo)] to-[var(--cyan)] text-black hover:scale-[1.02] hover:brightness-110 font-bold text-xs px-4 py-2.5 rounded-xl inline-flex items-center gap-1 shadow-lg shadow-cyan-500/20">
                   Go to Workspace <ArrowRight size={12} />
                 </Link>
               </div>
@@ -286,11 +286,23 @@ export default function HistoryPage() {
                       return (
                         <tr key={item.inference_id} className="hover:bg-white/5 transition-all">
                           <td className="px-5 py-4">
-                            <div className="w-10 h-10 rounded-lg border border-theme bg-theme-bg overflow-hidden flex items-center justify-center font-bold text-lg select-none">
-                              {item.diagram_type === "bst" || item.diagram_type === "dsa" ? "🌳" : "⚙️"}
+                            <div className="w-10 h-10 rounded-lg border border-theme bg-theme-bg overflow-hidden flex items-center justify-center font-bold text-lg select-none relative">
+                              {item.thumbnail_url ? (
+                                <img 
+                                  src={`${BACKEND}${item.thumbnail_url}`} 
+                                  alt="Diagram thumbnail" 
+                                  className="w-full h-full object-cover relative z-10" 
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = "none";
+                                  }}
+                                />
+                              ) : null}
+                              <span className="absolute inset-0 flex items-center justify-center bg-theme-bg text-sm">
+                                {item.diagram_type === "bst" || item.diagram_type === "dsa" ? "🌳" : "⚙️"}
+                              </span>
                             </div>
                           </td>
-                          <td className="px-5 py-4 font-bold text-slate-200 capitalize">
+                          <td className="px-5 py-4 font-bold capitalize">
                             <span 
                               className="px-2 py-0.5 rounded-full text-[9px] font-bold border"
                               style={{ backgroundColor: style.bg, color: style.color, borderColor: style.border }}

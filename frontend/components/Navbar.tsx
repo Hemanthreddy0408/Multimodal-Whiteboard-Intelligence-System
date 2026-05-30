@@ -18,6 +18,31 @@ export default function Navbar() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [usage, setUsage] = useState<number>(0);
+  const [limit, setLimit] = useState<number>(50);
+
+  const fetchUsage = async () => {
+    try {
+      const res = await fetch("/api/user/usage");
+      if (res.ok) {
+        const data = await res.json();
+        setUsage(data.usage ?? 0);
+        setLimit(data.limit ?? 50);
+      }
+    } catch (e) {
+      console.error("Error loading usage in navbar:", e);
+    }
+  };
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchUsage();
+      window.addEventListener("usage-updated", fetchUsage);
+      return () => {
+        window.removeEventListener("usage-updated", fetchUsage);
+      };
+    }
+  }, [status]);
 
   useEffect(() => {
     const activeTheme = (document.documentElement.getAttribute("data-theme") as "light" | "dark") || "dark";
@@ -189,11 +214,11 @@ export default function Navbar() {
                   style={{
                     background: "rgba(255,255,255,0.04)",
                     border: "1px solid rgba(255,255,255,0.07)",
-                    color: "#94a3b8",
+                    color: "var(--text-2)",
                   }}
                 >
-                  <Zap size={9} style={{ color: "#f59e0b" }} />
-                  12 / 50 analyses
+                  <Zap size={9} style={{ color: "var(--amber)" }} />
+                  {usage} / {limit === 99999 ? "∞" : limit} analyses
                 </div>
 
                 {/* Theme toggle */}

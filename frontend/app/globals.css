@@ -5,29 +5,38 @@
    DESIGN TOKENS
 ══════════════════════════════════════════ */
 :root {
-  --bg:           #060611;
-  --bg-2:         #0c0c1a;
-  --bg-3:         #111122;
-  --bg-4:         #191930;
+  --bg:           #020206;
+  --bg-2:         #050512;
+  --bg-3:         #0a0a1a;
+  --bg-4:         #101026;
 
-  --card:         rgba(255,255,255,0.035);
-  --card-border:  rgba(255,255,255,0.07);
-  --card-hover:   rgba(255,255,255,0.065);
+  --card:         rgba(255,255,255,0.02);
+  --card-border:  rgba(255,255,255,0.055);
+  --card-hover:   rgba(255,255,255,0.045);
 
-  /* Brand */
-  --indigo:  #6366f1;
-  --violet:  #8b5cf6;
-  --cyan:    #22d3ee;
-  --emerald: #10b981;
-  --amber:   #f59e0b;
-  --red:     #f87171;
-  --pink:    #ec4899;
+  /* Brand - Holographic Neon Accent System */
+  --indigo:  #00f2fe; /* Electric Cyan */
+  --violet:  #ff007a; /* Neon Hot Pink */
+  --cyan:    #00ffb7; /* Cyber Mint */
+  --emerald: #05ffa1; /* Neon Emerald */
+  --amber:   #ffaa00; /* Sunburst Gold */
+  --red:     #ff3b30;
+  --pink:    #d946ef;
+
+  /* RGB Values for opacity styling */
+  --indigo-rgb:  0, 242, 254;
+  --violet-rgb:  255, 0, 122;
+  --cyan-rgb:    0, 255, 183;
+  --emerald-rgb: 5, 255, 161;
+  --amber-rgb:   255, 170, 0;
+  --red-rgb:     255, 59, 48;
+  --pink-rgb:    217, 70, 239;
 
   /* Text */
-  --text-1: #f1f5f9;
-  --text-2: #94a3b8;
-  --text-3: #64748b;
-  --text-4: #334155;
+  --text-1: #f3f4f6;
+  --text-2: #a1a1aa;
+  --text-3: #71717a;
+  --text-4: #27272a;
 
   /* Radii */
   --r-sm:  8px;
@@ -36,10 +45,10 @@
   --r-xl:  20px;
   --r-2xl: 28px;
 
-  /* Shadows */
-  --glow-violet: 0 0 40px rgba(139,92,246,0.25);
-  --glow-cyan:   0 0 40px rgba(34,211,238,0.20);
-  --glow-indigo: 0 0 30px rgba(99,102,241,0.30);
+  /* Shadows - Cosmic glowing highlights */
+  --glow-violet: 0 0 40px rgba(255,0,122,0.20);
+  --glow-cyan:   0 0 40px rgba(0,242,254,0.18);
+  --glow-indigo: 0 0 35px rgba(0,242,254,0.20);
 }
 
 :root[data-theme="light"] {
@@ -48,22 +57,22 @@
   --bg-3: #eef0f8;
   --bg-4: #e2e6f4;
 
-  --card:        rgba(0,0,0,0.025);
-  --card-border: rgba(0,0,0,0.08);
-  --card-hover:  rgba(0,0,0,0.045);
+  --card:        rgba(0,0,0,0.02);
+  --card-border: rgba(0,0,0,0.06);
+  --card-hover:  rgba(0,0,0,0.035);
 
-  --indigo:  #4f46e5;
-  --violet:  #7c3aed;
-  --cyan:    #06b6d4;
+  --indigo:  #0d9488; /* Electric Teal */
+  --violet:  #db2777; /* Rose Pink */
+  --cyan:    #0891b2; /* Deep Cyan */
   --emerald: #059669;
-  --amber:   #d97706;
+  --amber:   #ea580c; /* Sunset Orange */
   --red:     #dc2626;
   --pink:    #db2777;
 
-  --text-1: #0f172a;
-  --text-2: #334155;
-  --text-3: #475569;
-  --text-4: #cbd5e1;
+  --text-1: #090d16;
+  --text-2: #4b5563;
+  --text-3: #6b7280;
+  --text-4: #d1d5db;
 }
 
 /* ══════════════════════════════════════════
@@ -807,3 +816,11 @@ body::before {
   border-radius: 99px;
 }
 .animated-link:hover::after { width: 100%; }
+
+/* Scan line animation keyframes */
+@keyframes scan {
+  0% { top: 10%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 90%; opacity: 0; }
+}

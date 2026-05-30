@@ -14,12 +14,12 @@ import { toast } from "react-hot-toast";
 type Tab = "profile" | "keys" | "appearance" | "notifications" | "billing" | "danger";
 
 const navItems: { id: Tab; label: string; icon: any; color: string }[] = [
-  { id: "profile",       label: "Profile",       icon: User,          color: "#8b5cf6" },
-  { id: "keys",          label: "API Keys",       icon: Key,           color: "#22d3ee" },
-  { id: "appearance",    label: "Appearance",     icon: Eye,           color: "#10b981" },
-  { id: "notifications", label: "Notifications",  icon: Bell,          color: "#f59e0b" },
-  { id: "billing",       label: "Billing",        icon: CreditCard,    color: "#6366f1" },
-  { id: "danger",        label: "Danger Zone",    icon: AlertTriangle, color: "#f87171" },
+  { id: "profile",       label: "Profile",       icon: User,          color: "var(--violet)" },
+  { id: "keys",          label: "API Keys",       icon: Key,           color: "var(--cyan)" },
+  { id: "appearance",    label: "Appearance",     icon: Eye,           color: "var(--emerald)" },
+  { id: "notifications", label: "Notifications",  icon: Bell,          color: "var(--amber)" },
+  { id: "billing",       label: "Billing",        icon: CreditCard,    color: "var(--indigo)" },
+  { id: "danger",        label: "Danger Zone",    icon: AlertTriangle, color: "var(--red)" },
 ];
 
 export default function SettingsPage() {
@@ -27,12 +27,38 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [mounted, setMounted] = useState(false);
   const [animKey, setAnimKey] = useState(0);
+  const [usage, setUsage] = useState<number>(0);
+  const [limit, setLimit] = useState<number>(50);
+  const [userPlan, setUserPlan] = useState<string>("free");
 
-  useEffect(() => { setMounted(true); }, []);
+  const fetchUsage = async () => {
+    try {
+      const res = await fetch("/api/user/usage");
+      if (res.ok) {
+        const data = await res.json();
+        setUsage(data.usage ?? 0);
+        setLimit(data.limit ?? 50);
+        setUserPlan(data.plan ?? "free");
+      }
+    } catch (e) {
+      console.error("Error loading usage in settings:", e);
+    }
+  };
+
+  useEffect(() => {
+    setMounted(true);
+    fetchUsage();
+  }, []);
 
   // Profile
   const [name, setName] = useState(session?.user?.name || "John Doe");
   const [email] = useState(session?.user?.email || "john.doe@company.com");
+
+  useEffect(() => {
+    if (session?.user?.name) {
+      setName(session.user.name);
+    }
+  }, [session]);
 
   // API Keys
   const [apiKeys, setApiKeys] = useState<any[]>([
@@ -123,10 +149,10 @@ export default function SettingsPage() {
                         onClick={() => switchTab(item.id)}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all relative group overflow-hidden"
                         style={{
-                          color: active ? item.color : "#64748b",
-                          background: active ? `${item.color}14` : "transparent",
-                          border: `1px solid ${active ? `${item.color}28` : "transparent"}`,
-                          boxShadow: active ? `0 2px 12px ${item.color}15` : "none",
+                          color: active ? item.color : "var(--text-3)",
+                          background: active ? `rgba(var(--${item.id === "profile" ? "violet" : item.id === "keys" ? "cyan" : item.id === "appearance" ? "emerald" : item.id === "notifications" ? "amber" : item.id === "billing" ? "indigo" : "red"}-rgb), 0.08)` : "transparent",
+                          border: `1px solid rgba(var(--${item.id === "profile" ? "violet" : item.id === "keys" ? "cyan" : item.id === "appearance" ? "emerald" : item.id === "notifications" ? "amber" : item.id === "billing" ? "indigo" : "red"}-rgb), 0.15)`,
+                          boxShadow: active ? `0 2px 12px rgba(var(--${item.id === "profile" ? "violet" : item.id === "keys" ? "cyan" : item.id === "appearance" ? "emerald" : item.id === "notifications" ? "amber" : item.id === "billing" ? "indigo" : "red"}-rgb), 0.1)` : "none",
                           transform: mounted ? "none" : "translateX(-8px)",
                           opacity: mounted ? 1 : 0,
                           animation: mounted ? `slide-right 0.35s cubic-bezier(0.34,1.56,0.64,1) ${i * 0.04}s both` : "none",
@@ -144,8 +170,8 @@ export default function SettingsPage() {
                         <span
                           className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
                           style={{
-                            background: active ? `${item.color}20` : "rgba(255,255,255,0.05)",
-                            color: active ? item.color : "#64748b",
+                            background: active ? `rgba(var(--${item.id === "profile" ? "violet" : item.id === "keys" ? "cyan" : item.id === "appearance" ? "emerald" : item.id === "notifications" ? "amber" : item.id === "billing" ? "indigo" : "red"}-rgb), 0.15)` : "rgba(255,255,255,0.04)",
+                            color: active ? item.color : "var(--text-3)",
                           }}
                         >
                           <item.icon size={12} />
@@ -177,13 +203,13 @@ export default function SettingsPage() {
                 }}
               >
                 {/* Panel Header */}
-                <div className="flex items-center gap-3 mb-6 pb-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <div className="flex items-center gap-3 mb-6 pb-5" style={{ borderBottom: "1px solid var(--card-border)" }}>
                   <div
                     className="w-9 h-9 rounded-xl flex items-center justify-center"
                     style={{
-                      background: `${activeNav?.color}18`,
-                      border: `1px solid ${activeNav?.color}30`,
-                      boxShadow: `0 0 20px ${activeNav?.color}15`,
+                      background: `rgba(var(--${activeTab === "profile" ? "violet" : activeTab === "keys" ? "cyan" : activeTab === "appearance" ? "emerald" : activeTab === "notifications" ? "amber" : activeTab === "billing" ? "indigo" : "red"}-rgb), 0.12)`,
+                      border: `1px solid rgba(var(--${activeTab === "profile" ? "violet" : activeTab === "keys" ? "cyan" : activeTab === "appearance" ? "emerald" : activeTab === "notifications" ? "amber" : activeTab === "billing" ? "indigo" : "red"}-rgb), 0.22)`,
+                      boxShadow: `0 0 20px rgba(var(--${activeTab === "profile" ? "violet" : activeTab === "keys" ? "cyan" : activeTab === "appearance" ? "emerald" : activeTab === "notifications" ? "amber" : activeTab === "billing" ? "indigo" : "red"}-rgb), 0.12)`,
                     }}
                   >
                     {activeNav && <activeNav.icon size={16} style={{ color: activeNav.color }} />}
@@ -532,16 +558,20 @@ export default function SettingsPage() {
                         >
                           <Zap size={8} /> Active Plan
                         </span>
-                        <h4 className="text-base font-black" style={{ color: "#f1f5f9" }}>Free Sandbox</h4>
-                        <p className="text-[10px]" style={{ color: "#94a3b8" }}>50 analyses/month · No API keys · No priority processing</p>
+                        <h4 className="text-base font-black" style={{ color: "#f1f5f9" }}>{userPlan === "pro" ? "Professional Developer" : userPlan === "enterprise" ? "Enterprise Core" : "Free Sandbox"}</h4>
+                        <p className="text-[10px]" style={{ color: "#94a3b8" }}>
+                          {limit === 99999 ? "Unlimited" : limit} analyses/month · {userPlan !== "free" ? "Dedicated support" : "No priority processing"}
+                        </p>
                       </div>
-                      <button
-                        onClick={() => toast.success("Redirecting to Stripe...")}
-                        className="btn px-4 py-2.5 rounded-xl text-xs font-bold text-white flex-shrink-0 relative z-10 transition-all hover:scale-105 active:scale-95"
-                        style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)", boxShadow: "0 4px 16px rgba(245,158,11,0.3)" }}
-                      >
-                        Upgrade Plan
-                      </button>
+                      {userPlan === "free" && (
+                        <button
+                          onClick={() => toast.success("Redirecting to Stripe...")}
+                          className="btn px-4 py-2.5 rounded-xl text-xs font-bold text-white flex-shrink-0 relative z-10 transition-all hover:scale-105 active:scale-95"
+                          style={{ background: "linear-gradient(135deg, var(--amber), #d97706)", boxShadow: "0 4px 16px rgba(245,158,11,0.3)" }}
+                        >
+                          Upgrade Plan
+                        </button>
+                      )}
                     </div>
 
                     {/* Usage meter */}
@@ -551,20 +581,22 @@ export default function SettingsPage() {
                     >
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "#64748b" }}>Monthly Usage</span>
-                        <span className="text-xs font-bold" style={{ color: "#f59e0b" }}>12 / 50</span>
+                        <span className="text-xs font-bold" style={{ color: "var(--amber)" }}>{usage} / {limit === 99999 ? "∞" : limit}</span>
                       </div>
                       <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
                         <div
                           className="h-full rounded-full"
                           style={{
-                            width: "24%",
-                            background: "linear-gradient(90deg, #f59e0b, #fb923c)",
+                            width: limit > 0 ? `${Math.min(100, (usage / limit) * 100)}%` : "0%",
+                            background: "linear-gradient(90deg, var(--amber), #fb923c)",
                             boxShadow: "0 0 10px rgba(245,158,11,0.4)",
                             transition: "width 1s ease",
                           }}
                         />
                       </div>
-                      <p className="text-[9px]" style={{ color: "#475569" }}>38 analyses remaining this billing cycle</p>
+                      <p className="text-[9px]" style={{ color: "var(--text-3)" }}>
+                        {limit === 99999 ? "Unlimited analyses" : `${Math.max(0, limit - usage)} analyses remaining this billing cycle`}
+                      </p>
                     </div>
 
                     {/* Invoice */}

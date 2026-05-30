@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { 
@@ -11,6 +11,74 @@ import {
 
 export default function LandingPage() {
   const [demoOpen, setDemoOpen] = useState(false);
+  const [simStage, setSimStage] = useState<"idle" | "uploading" | "ocr" | "compiling" | "done">("idle");
+  const [typedCode, setTypedCode] = useState("");
+  const [simProgress, setSimProgress] = useState(0);
+
+  const fullCode = `# Generated BST node structure
+class Node:
+    def __init__(self, val):
+        self.val = val
+        self.left = None
+        self.right = None
+
+def inorder(root):
+    if root:
+        inorder(root.left)
+        print(root.val)
+        inorder(root.right)`;
+
+  useEffect(() => {
+    let active = true;
+    
+    const runSimulation = async () => {
+      if (!active) return;
+      // 1. Idle state
+      setSimStage("idle");
+      setTypedCode("");
+      setSimProgress(0);
+      await new Promise(r => setTimeout(r, 2000));
+
+      if (!active) return;
+      // 2. Uploading state
+      setSimStage("uploading");
+      for (let p = 0; p <= 100; p += 10) {
+        if (!active) return;
+        setSimProgress(p);
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      if (!active) return;
+      // 3. OCR state
+      setSimStage("ocr");
+      await new Promise(r => setTimeout(r, 1800));
+
+      if (!active) return;
+      // 4. Compiling state
+      setSimStage("compiling");
+      let codeIndex = 0;
+      while (codeIndex < fullCode.length && active) {
+        codeIndex += 3;
+        setTypedCode(fullCode.slice(0, codeIndex));
+        await new Promise(r => setTimeout(r, 40));
+      }
+
+      if (!active) return;
+      // 5. Done state
+      setSimStage("done");
+      await new Promise(r => setTimeout(r, 4500));
+      
+      if (active) {
+        runSimulation();
+      }
+    };
+
+    runSimulation();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const features = [
     {
@@ -119,13 +187,13 @@ export default function LandingPage() {
         {/* Mockup Frame */}
         <div className="max-w-4xl mx-auto mt-16 rounded-2xl border border-theme bg-theme-panel/40 p-2.5 shadow-2xl relative hover:scale-[1.01] transition-all duration-500">
           {/* Glowing glow border */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-[#7C3AED] to-[#06B6D4] opacity-10 blur-xl pointer-events-none" />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-[var(--indigo)] to-[var(--violet)] opacity-15 blur-2xl pointer-events-none" />
           
           <div 
             className="rounded-xl overflow-hidden border border-theme aspect-video flex flex-col"
             style={{
-              background: "rgba(12,12,26,0.8)",
-              backdropFilter: "blur(12px)"
+              background: "rgba(10,10,26,0.85)",
+              backdropFilter: "blur(20px)"
             }}
           >
             <div className="h-8 bg-theme-panel/85 border-b border-theme flex items-center px-4 gap-1.5">
@@ -133,39 +201,132 @@ export default function LandingPage() {
               <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
               <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
               <span className="text-[10px] text-theme-muted ml-4 font-mono">whiteboardai.com/workspace</span>
+              
+              {/* Simulator state pill */}
+              <span className="ml-auto text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border bg-white/5 border-white/10 flex items-center gap-1.5 animate-fade-in" style={{
+                color: simStage === "done" ? "var(--cyan)" : simStage === "idle" ? "var(--text-3)" : "var(--amber)",
+                borderColor: simStage === "done" ? "rgba(0,255,183,0.3)" : simStage === "idle" ? "rgba(255,255,255,0.06)" : "rgba(255,170,0,0.3)"
+              }}>
+                <span className={`w-1.5 h-1.5 rounded-full ${simStage === "done" ? "bg-[var(--cyan)]" : "bg-[var(--amber)] animate-pulse"}`} />
+                {simStage === "idle" && "Simulator Idle"}
+                {simStage === "uploading" && `Uploading ${simProgress}%`}
+                {simStage === "ocr" && "Parsing Shapes..."}
+                {simStage === "compiling" && "Streaming Code..."}
+                {simStage === "done" && "Complete"}
+              </span>
             </div>
             
-            {/* Demo static layout representation */}
-            <div className="flex-1 grid grid-cols-2 p-4 gap-4 bg-theme-bg/60 text-left">
-              <div className="border border-theme rounded-xl bg-white/5 p-4 flex flex-col justify-between">
-                <div className="border-2 border-[#7C3AED] rounded-lg p-6 bg-[#7C3AED]/5 border-dashed text-center">
-                  <FileImage size={24} className="text-[#7C3AED] mx-auto mb-2 animate-pulse" />
-                  <span className="text-xs font-bold text-theme-primary">Binary Search Tree Drawing</span>
-                </div>
-                <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg text-[10px] border border-theme">
-                  <span className="font-bold text-theme-secondary">Classified: BST</span>
-                  <span className="text-emerald-400 font-bold">Confidence: 96%</span>
-                </div>
-              </div>
-              <div className="border border-theme rounded-xl bg-theme-panel/70 p-4 flex flex-col justify-between">
-                <pre className="font-mono text-[9px] text-[#06B6D4] leading-relaxed">
-{`# Generated BST node structure
-class Node:
-    def __init__(self, val):
-        self.val = val
-        self.left = None
-        self.right = None
+            {/* Demo Simulator layout */}
+            <div className="flex-grow grid grid-cols-2 p-4 gap-4 bg-theme-bg/30 text-left min-h-0">
+              
+              {/* Left Side: Whiteboard Sketch Analysis */}
+              <div className="border border-theme rounded-xl bg-white/5 p-4 flex flex-col justify-between relative overflow-hidden">
+                {simStage === "idle" && (
+                  <div className="flex-grow flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-lg p-6 bg-white/[0.01]">
+                    <FileImage size={28} className="text-theme-muted mb-2 animate-bounce" />
+                    <span className="text-xs font-bold text-theme-secondary">Drag & drop whiteboard drawing</span>
+                    <span className="text-[9px] text-theme-muted mt-1">PNG, JPG, or Live Camera feed</span>
+                  </div>
+                )}
+                
+                {simStage === "uploading" && (
+                  <div className="flex-grow flex flex-col items-center justify-center p-6 space-y-4">
+                    <Brain className="text-[var(--violet)] animate-pulse" size={32} />
+                    <div className="w-full space-y-1.5">
+                      <div className="flex justify-between text-[10px] font-bold text-theme-secondary">
+                        <span>Uploading sketch_bst.png</span>
+                        <span>{simProgress}%</span>
+                      </div>
+                      <div className="h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                        <div className="h-full bg-gradient-to-r from-[var(--indigo)] to-[var(--violet)] transition-all duration-100" style={{ width: `${simProgress}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {(simStage === "ocr" || simStage === "compiling" || simStage === "done") && (
+                  <div className="flex-grow flex flex-col justify-between relative h-full">
+                    {/* Mock tree layout */}
+                    <div className="flex-grow border border-white/5 rounded-lg bg-black/40 p-4 flex flex-col items-center justify-center relative min-h-[120px]">
+                      
+                      {/* Scanning glow bar during OCR stage */}
+                      {simStage === "ocr" && (
+                        <div className="absolute left-0 right-0 h-0.5 bg-[var(--cyan)] shadow-[0_0_12px_rgba(0,255,183,0.8)] animate-[scan_1.8s_ease-in-out_infinite] z-20" />
+                      )}
 
-def inorder(root):
-    if root:
-        inorder(root.left)
-        print(root.val)
-        inorder(root.right)`}
-                </pre>
-                <div className="bg-[#7C3AED]/10 text-[#7C3AED] p-2 rounded-lg text-[9px] border border-[#7C3AED]/20">
-                  ⚡ Code streams token by token via WebSocket.
-                </div>
+                      {/* BST Graph Elements */}
+                      <div className="flex flex-col items-center space-y-4 relative z-10 scale-90">
+                        {/* Root Node */}
+                        <div className="w-7 h-7 rounded-full border-2 border-[var(--violet)] bg-black/80 flex items-center justify-center font-mono text-[10px] font-bold text-[var(--violet)] shadow-[0_0_8px_rgba(255,0,122,0.3)]">8</div>
+                        <div className="flex gap-10">
+                          {/* Child Left */}
+                          <div className="w-7 h-7 rounded-full border-2 border-[var(--indigo)] bg-black/80 flex items-center justify-center font-mono text-[10px] font-bold text-[var(--indigo)] shadow-[0_0_8px_rgba(0,242,254,0.3)]">3</div>
+                          {/* Child Right */}
+                          <div className="w-7 h-7 rounded-full border-2 border-[var(--indigo)] bg-black/80 flex items-center justify-center font-mono text-[10px] font-bold text-[var(--indigo)] shadow-[0_0_8px_rgba(0,242,254,0.3)]">10</div>
+                        </div>
+                      </div>
+                      
+                      {/* Bounding box overlays */}
+                      <span className="absolute top-3 left-4 text-[7px] font-mono uppercase tracking-widest text-[var(--cyan)] bg-[var(--cyan)]/10 px-1.5 py-0.5 rounded border border-[var(--cyan)]/25">
+                        DINOv2: BST Model
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg text-[10px] border border-theme mt-3">
+                      <span className="font-bold text-theme-secondary flex items-center gap-1">
+                        <Layers size={10} className="text-[var(--indigo)]" />
+                        Type: Binary Search Tree
+                      </span>
+                      <span className="text-[var(--cyan)] font-extrabold font-mono">Conf: 96.8%</span>
+                    </div>
+                  </div>
+                )}
               </div>
+              
+              {/* Right Side: Code Output / Compiler Log Terminal */}
+              <div className="border border-theme rounded-xl bg-theme-panel/75 p-4 flex flex-col justify-between font-mono text-[9px] relative overflow-hidden">
+                {simStage === "idle" && (
+                  <div className="flex-grow flex items-center justify-center text-theme-muted italic">
+                    Awaiting diagram upload...
+                  </div>
+                )}
+                
+                {simStage === "uploading" && (
+                  <div className="flex-grow flex flex-col justify-center text-theme-muted space-y-1">
+                    <p className="text-[var(--amber)]">Ready for binary image read.</p>
+                    <p>Filename: sketch_bst.png</p>
+                    <p>Format: image/png</p>
+                    <p className="animate-pulse">Loading buffer streams...</p>
+                  </div>
+                )}
+                
+                {simStage === "ocr" && (
+                  <div className="flex-grow flex flex-col space-y-1 text-[var(--cyan)] font-mono leading-relaxed">
+                    <p className="text-[var(--indigo)]">[SYS] Initializing DINOv2 pipeline...</p>
+                    <p className="text-[var(--emerald)]">[SYS] Classification: Binary Search Tree (0.96)</p>
+                    <p>[SYS] Executing OpenCV contour mapping...</p>
+                    <p>[SYS] Segmenting nodes and vertex bounds...</p>
+                    <p className="text-[var(--violet)] animate-pulse">[SYS] Calling GPT-4o compiler engine...</p>
+                  </div>
+                )}
+                
+                {(simStage === "compiling" || simStage === "done") && (
+                  <div className="flex-grow flex flex-col justify-between">
+                    <pre className="text-[var(--indigo)] leading-relaxed select-none overflow-y-auto max-h-[130px] pr-2">
+                      {typedCode}
+                      <span className="inline-block w-1 h-3 ml-0.5 bg-[var(--indigo)] animate-[ping_0.8s_infinite]" />
+                    </pre>
+                    
+                    {simStage === "done" && (
+                      <div className="bg-[var(--emerald)]/10 text-[var(--emerald)] p-2 rounded-lg border border-[var(--emerald)]/20 mt-2 flex items-center justify-between">
+                        <span>⚡ Code compilation complete (0.8s)</span>
+                        <span className="text-[8px] font-black uppercase bg-[var(--emerald)] text-black px-1.5 py-0.5 rounded">Success</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
         </div>

@@ -130,6 +130,11 @@ export default function Home() {
           setAnalyzing(false);
           setProgress({ stage: "complete", progress: 100, message: "Analysis complete!" });
           
+          // Increment monthly usage count and notify other UI components to refresh
+          fetch("/api/user/usage", { method: "POST" })
+            .then(() => window.dispatchEvent(new Event("usage-updated")))
+            .catch(err => console.error("Failed to increment usage stats:", err));
+          
           setChatMessages(prev => [...prev, {
             id: `sys-${Date.now()}`,
             role: "assistant",

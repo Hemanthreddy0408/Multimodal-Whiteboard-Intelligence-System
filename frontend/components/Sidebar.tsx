@@ -7,11 +7,38 @@ import { LayoutDashboard, Cpu, History, Settings, Zap, BarChart2, TrendingUp } f
 import { useEffect, useState } from "react";
 
 export default function Sidebar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [usage, setUsage] = useState<number>(0);
+  const [limit, setLimit] = useState<number>(50);
 
-  useEffect(() => { setMounted(true); }, []);
+  const fetchUsage = async () => {
+    try {
+      const res = await fetch("/api/user/usage");
+      if (res.ok) {
+        const data = await res.json();
+        setUsage(data.usage ?? 0);
+        setLimit(data.limit ?? 50);
+      }
+    } catch (e) {
+      console.error("Error loading usage in sidebar:", e);
+    }
+  };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchUsage();
+      window.addEventListener("usage-updated", fetchUsage);
+      return () => {
+        window.removeEventListener("usage-updated", fetchUsage);
+      };
+    }
+  }, [status]);
 
   const userPlan = (session?.user as any)?.plan || "free";
   const userName = session?.user?.name || "User";
@@ -187,7 +214,7 @@ export default function Sidebar() {
             <BarChart2 size={11} style={{ color: "#8b5cf6" }} />
             Monthly Usage
           </span>
-          <span className="text-[10px] font-bold" style={{ color: "#8b5cf6" }}>12/50</span>
+          <span className="text-[10px] font-bold" style={{ color: "var(--violet)" }}>{usage}/{limit === 99999 ? "∞" : limit}</span>
         </div>
 
         {/* Animated progress */}
@@ -195,8 +222,8 @@ export default function Sidebar() {
           <div
             className="h-full rounded-full relative overflow-hidden"
             style={{
-              width: "24%",
-              background: "linear-gradient(90deg, #7c3aed, #6366f1, #22d3ee)",
+              width: limit > 0 ? `${Math.min(100, (usage / limit) * 100)}%` : "0%",
+              background: "linear-gradient(90deg, var(--indigo), var(--violet), var(--cyan))",
               backgroundSize: "200%",
               animation: "gradient-shift 3s ease infinite",
             }}
@@ -212,8 +239,8 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <p className="text-[9px] font-medium" style={{ color: "rgba(100,116,139,0.7)" }}>
-          38 analyses remaining this cycle
+        <p className="text-[9px] font-medium" style={{ color: "var(--text-3)" }}>
+          {limit === 99999 ? "Unlimited analyses" : `${Math.max(0, limit - usage)} analyses remaining this cycle`}
         </p>
       </div>
     </aside>
