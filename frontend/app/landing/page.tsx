@@ -73,16 +73,21 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-theme-bg text-theme-primary flex flex-col font-sans overflow-x-hidden transition-colors duration-250">
+    <div className="min-h-screen text-theme-primary flex flex-col font-sans overflow-x-hidden relative" style={{ background: "var(--bg)" }}>
       
+      {/* Background */}
+      <div className="mesh-bg">
+        <div className="mesh-orb mesh-orb-1" />
+        <div className="mesh-orb mesh-orb-2" />
+        <div className="mesh-orb mesh-orb-3" />
+      </div>
+
       {/* Navbar */}
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full text-center space-y-12">
-        {/* Orbs */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/10 blur-[140px] rounded-full pointer-events-none -z-10" />
-
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full text-center space-y-12 z-10">
+        
         <div className="space-y-6 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-[#7C3AED]/20 text-[10px] uppercase tracking-wider font-extrabold text-[#7C3AED]">
             <Zap size={10} /> Phase 3 Live
@@ -97,10 +102,10 @@ export default function LandingPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/register" className="btn bg-gradient-to-tr from-[#7C3AED] to-[#8B5CF6] hover:brightness-110 text-white font-bold text-xs px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-[#7C3AED]/20">
+          <Link href="/register" className="btn bg-gradient-to-tr from-[#7C3AED] to-[#8B5CF6] hover:brightness-110 text-white font-bold text-xs px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-[#7C3AED]/20 cursor-pointer transition-all">
             Start for free <ArrowRight size={13} />
           </Link>
-          <button onClick={() => setDemoOpen(true)} className="btn border border-theme bg-white/5 hover:bg-white/10 text-theme-primary font-bold text-xs px-6 py-3 rounded-xl flex items-center gap-2">
+          <button onClick={() => setDemoOpen(true)} className="btn border border-theme bg-white/5 hover:bg-white/10 text-theme-primary font-bold text-xs px-6 py-3 rounded-xl flex items-center gap-2 cursor-pointer transition-all">
             <Play size={13} /> Watch demo
           </button>
         </div>
@@ -112,12 +117,18 @@ export default function LandingPage() {
         </div>
 
         {/* Mockup Frame */}
-        <div className="max-w-4xl mx-auto mt-16 rounded-2xl border border-theme bg-theme-panel p-2.5 shadow-2xl relative">
+        <div className="max-w-4xl mx-auto mt-16 rounded-2xl border border-theme bg-theme-panel/40 p-2.5 shadow-2xl relative hover:scale-[1.01] transition-all duration-500">
           {/* Glowing glow border */}
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-[#7C3AED] to-[#06B6D4] opacity-10 blur-xl pointer-events-none" />
           
-          <div className="rounded-xl overflow-hidden bg-theme-bg border border-theme aspect-video flex flex-col">
-            <div className="h-8 bg-theme-panel border-b border-theme flex items-center px-4 gap-1.5">
+          <div 
+            className="rounded-xl overflow-hidden border border-theme aspect-video flex flex-col"
+            style={{
+              background: "rgba(12,12,26,0.8)",
+              backdropFilter: "blur(12px)"
+            }}
+          >
+            <div className="h-8 bg-theme-panel/85 border-b border-theme flex items-center px-4 gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
               <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
               <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
@@ -125,10 +136,10 @@ export default function LandingPage() {
             </div>
             
             {/* Demo static layout representation */}
-            <div className="flex-1 grid grid-cols-2 p-4 gap-4 bg-theme-bg text-left">
+            <div className="flex-1 grid grid-cols-2 p-4 gap-4 bg-theme-bg/60 text-left">
               <div className="border border-theme rounded-xl bg-white/5 p-4 flex flex-col justify-between">
                 <div className="border-2 border-[#7C3AED] rounded-lg p-6 bg-[#7C3AED]/5 border-dashed text-center">
-                  <FileImage size={24} className="text-[#7C3AED] mx-auto mb-2" />
+                  <FileImage size={24} className="text-[#7C3AED] mx-auto mb-2 animate-pulse" />
                   <span className="text-xs font-bold text-theme-primary">Binary Search Tree Drawing</span>
                 </div>
                 <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg text-[10px] border border-theme">
@@ -136,7 +147,7 @@ export default function LandingPage() {
                   <span className="text-emerald-400 font-bold">Confidence: 96%</span>
                 </div>
               </div>
-              <div className="border border-theme rounded-xl bg-theme-panel p-4 flex flex-col justify-between">
+              <div className="border border-theme rounded-xl bg-theme-panel/70 p-4 flex flex-col justify-between">
                 <pre className="font-mono text-[9px] text-[#06B6D4] leading-relaxed">
 {`# Generated BST node structure
 class Node:
@@ -162,7 +173,7 @@ def inorder(root):
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-24 px-4 bg-theme-panel/30 border-y border-theme">
+      <section id="features" className="py-24 px-4 bg-theme-panel/20 border-y border-theme relative z-10">
         <div className="max-w-7xl mx-auto w-full space-y-16">
           <div className="text-center space-y-3">
             <h2 className="text-3xl font-extrabold tracking-tight text-theme-primary">Packed with enterprise-grade tools</h2>
@@ -170,7 +181,16 @@ def inorder(root):
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((f, i) => (
-              <div key={i} className="p-6 rounded-2xl border border-theme bg-theme-panel/40 space-y-4 hover:border-[#7C3AED]/40 transition-all group">
+              <div 
+                key={i} 
+                className="p-6 rounded-2xl border space-y-4 hover:border-[#7C3AED]/40 hover:scale-[1.02] transition-all group"
+                style={{
+                  background: "rgba(12,12,26,0.6)",
+                  borderColor: "rgba(255,255,255,0.05)",
+                  backdropFilter: "blur(12px)",
+                  animation: `slide-up 0.4s cubic-bezier(0.34,1.56,0.64,1) ${i * 0.05}s both`
+                }}
+              >
                 <div className="w-10 h-10 rounded-xl bg-[#7C3AED]/10 flex items-center justify-center border border-[#7C3AED]/20 group-hover:bg-[#7C3AED]/20 transition-all">
                   <f.icon className="text-[#7C3AED]" size={18} />
                 </div>
@@ -183,16 +203,22 @@ def inorder(root):
       </section>
 
       {/* How it Works vertical stepper */}
-      <section className="py-24 px-4 max-w-3xl mx-auto w-full space-y-16">
+      <section className="py-24 px-4 max-w-3xl mx-auto w-full space-y-16 relative z-10">
         <div className="text-center space-y-3">
           <h2 className="text-3xl font-extrabold tracking-tight text-theme-primary">The 6-Step Compilation Engine</h2>
           <p className="text-xs text-theme-secondary max-w-sm mx-auto">A visual representation of the multiclass computer vision pipeline.</p>
         </div>
 
-        <div className="relative border-l-2 border-theme ml-4 pl-8 space-y-10">
+        <div className="relative border-l border-theme ml-4 pl-8 space-y-10">
           {steps.map((s, idx) => (
             <div key={idx} className="relative">
-              <div className="absolute left-[-45px] top-0 w-8 h-8 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#8B5CF6] flex items-center justify-center font-black text-xs text-white shadow-md shadow-[#7C3AED]/20">
+              <div 
+                className="absolute left-[-45px] top-0 w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs text-white shadow-md shadow-[#7C3AED]/20"
+                style={{
+                  background: "linear-gradient(135deg, #7c3aed, #8b5cf6)",
+                  animation: `scale-in 0.3s cubic-bezier(0.34,1.56,0.64,1) ${idx * 0.05}s both`
+                }}
+              >
                 {s.num}
               </div>
               <div className="space-y-1">
@@ -205,7 +231,7 @@ def inorder(root):
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 px-4 bg-theme-panel/20 border-t border-theme">
+      <section className="py-24 px-4 bg-theme-panel/10 border-t border-theme relative z-10">
         <div className="max-w-7xl mx-auto w-full space-y-16">
           <div className="text-center space-y-3">
             <h2 className="text-3xl font-extrabold tracking-tight text-theme-primary">Engineers love WhiteboardAI</h2>
@@ -213,7 +239,15 @@ def inorder(root):
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((t, idx) => (
-              <div key={idx} className="p-6 rounded-2xl border border-theme bg-theme-panel space-y-4 flex flex-col justify-between">
+              <div 
+                key={idx} 
+                className="p-6 rounded-2xl border space-y-4 flex flex-col justify-between hover:scale-[1.02] transition-all"
+                style={{
+                  background: "rgba(12,12,26,0.6)",
+                  borderColor: "rgba(255,255,255,0.05)",
+                  backdropFilter: "blur(12px)"
+                }}
+              >
                 <p className="text-xs text-theme-secondary leading-relaxed italic">"{t.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#7C3AED] to-[#06B6D4] flex items-center justify-center text-xs font-bold text-white">
@@ -231,20 +265,20 @@ def inorder(root):
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-theme bg-theme-bg py-12 px-4 sm:px-6 lg:px-8">
+      <footer className="mt-auto border-t border-theme bg-theme-bg/60 py-12 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           <div className="space-y-4">
             <h4 className="text-xs font-bold uppercase tracking-wider text-theme-secondary">Product</h4>
             <ul className="space-y-2 text-xs text-theme-muted">
-              <li><Link href="#features" className="hover:text-slate-300">Features</Link></li>
-              <li><Link href="/pricing" className="hover:text-slate-300">Pricing</Link></li>
+              <li><Link href="#features" className="hover:text-slate-300 transition-colors">Features</Link></li>
+              <li><Link href="/pricing" className="hover:text-slate-300 transition-colors">Pricing</Link></li>
               <li><span className="opacity-50">Changelog</span></li>
             </ul>
           </div>
           <div className="space-y-4">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Company</h4>
             <ul className="space-y-2 text-xs text-slate-500">
-              <li><Link href="/about" className="hover:text-slate-300">About Pipeline</Link></li>
+              <li><Link href="/about" className="hover:text-slate-300 transition-colors">About Pipeline</Link></li>
               <li><span className="opacity-50">Blog</span></li>
               <li><span className="opacity-50">Careers</span></li>
             </ul>
@@ -276,7 +310,7 @@ def inorder(root):
       {demoOpen && (
         <div className="fixed inset-0 z-50 bg-theme-bg/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="relative w-full max-w-3xl rounded-2xl overflow-hidden border border-theme bg-theme-panel shadow-2xl">
-            <button onClick={() => setDemoOpen(false)} className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-white/5 text-theme-muted hover:text-theme-primary z-10">
+            <button onClick={() => setDemoOpen(false)} className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-white/5 text-theme-muted hover:text-theme-primary z-10 cursor-pointer">
               <X size={18} />
             </button>
             <div className="aspect-video bg-theme-bg flex flex-col items-center justify-center p-12 text-center space-y-4">
@@ -287,7 +321,7 @@ def inorder(root):
                 <h3 className="font-bold text-sm text-theme-primary">WhiteboardAI 30-Second Compilation Demo</h3>
                 <p className="text-xs text-theme-muted mt-1 max-w-sm mx-auto">Watch DINOv2 categorize and OpenCV contour map nodes in real time.</p>
               </div>
-              <div className="w-full max-w-md h-2 progress-track">
+              <div className="w-full max-w-md h-2 bg-theme-panel rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] rounded-full animate-[pulse_2s_infinite]" style={{ width: "70%" }} />
               </div>
             </div>

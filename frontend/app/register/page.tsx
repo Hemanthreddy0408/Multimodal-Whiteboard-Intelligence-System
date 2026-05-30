@@ -81,10 +81,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-theme-bg">
+    <div className="flex min-h-screen text-theme-primary relative overflow-hidden h-screen" style={{ background: "var(--bg)" }}>
       
+      {/* Background */}
+      <div className="mesh-bg">
+        <div className="mesh-orb mesh-orb-1" />
+        <div className="mesh-orb mesh-orb-2" />
+        <div className="mesh-orb mesh-orb-3" />
+      </div>
+
       {/* Left panel decoration (same as Login) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-theme-panel border-r border-theme flex-col justify-center items-center p-12 relative overflow-hidden">
+      <div 
+        className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 relative overflow-hidden z-10"
+        style={{
+          background: "linear-gradient(135deg, rgba(12,12,26,0.85), rgba(20,14,40,0.75))",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+          backdropFilter: "blur(20px)"
+        }}
+      >
         <div className="absolute inset-0 opacity-5 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]" />
         
         <div className="relative z-10 max-w-md text-center space-y-8">
@@ -98,7 +112,13 @@ export default function RegisterPage() {
           <h2 className="text-2xl font-black tracking-tight text-theme-primary">Real-time Stream Engine</h2>
           <p className="text-xs text-theme-secondary">Our deep visual classifier maps inputs to structured adjacency graphs using local model heads.</p>
           
-          <div className="relative w-72 h-48 mx-auto border border-theme rounded-2xl bg-theme-bg/80 p-6 flex flex-col justify-between items-center shadow-inner">
+          <div 
+            className="relative w-72 h-48 mx-auto border rounded-2xl p-6 flex flex-col justify-between items-center shadow-inner"
+            style={{
+              background: "rgba(12,12,26,0.6)",
+              borderColor: "rgba(255,255,255,0.05)",
+            }}
+          >
             <div className="flex justify-between w-full">
               <div className="w-10 h-10 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-xs font-bold text-[#7C3AED] animate-[pulse_2s_infinite]">Image</div>
               <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-xs font-bold text-cyan-400 animate-[pulse_2.5s_infinite]">OCR</div>
@@ -119,8 +139,16 @@ export default function RegisterPage() {
       </div>
 
       {/* Right panel: Register form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
-        <div className="w-full max-w-sm space-y-5 bg-theme-panel border border-theme p-8 rounded-2xl shadow-xl">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 relative z-10">
+        <div 
+          className="w-full max-w-sm space-y-5 p-8 rounded-2xl shadow-2xl relative z-10 slide-up"
+          style={{
+            background: "rgba(12,12,26,0.75)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(16px)",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(139,92,246,0.05)"
+          }}
+        >
           <div className="text-center space-y-1">
             <h1 className="text-xl font-bold text-theme-primary">Create account</h1>
             <p className="text-xs text-theme-secondary">Register to start your free workspace subscription</p>
@@ -135,7 +163,7 @@ export default function RegisterPage() {
                   type="text"
                   placeholder="John Doe"
                   {...register("name")}
-                  className={`input w-full pl-9 pr-3 py-2 text-xs rounded-xl ${errors.name ? "border-red-500" : ""}`}
+                  className={`input w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-theme-panel/60 border-theme text-theme-primary ${errors.name ? "border-red-500" : ""}`}
                 />
                 <User size={12} className="absolute left-3.5 top-3 text-slate-400" />
               </div>
@@ -150,7 +178,7 @@ export default function RegisterPage() {
                   type="email"
                   placeholder="name@company.com"
                   {...register("email")}
-                  className={`input w-full pl-9 pr-3 py-2 text-xs rounded-xl ${errors.email ? "border-red-500" : ""}`}
+                  className={`input w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-theme-panel/60 border-theme text-theme-primary ${errors.email ? "border-red-500" : ""}`}
                 />
                 <Mail size={12} className="absolute left-3.5 top-3 text-slate-400" />
               </div>
@@ -169,13 +197,13 @@ export default function RegisterPage() {
                     register("password").onChange(e);
                     setPasswordValue(e.target.value);
                   }}
-                  className={`input w-full pl-9 pr-9 py-2 text-xs rounded-xl ${errors.password ? "border-red-500" : ""}`}
+                  className={`input w-full pl-9 pr-9 py-2 text-xs rounded-xl bg-theme-panel/60 border-theme text-theme-primary ${errors.password ? "border-red-500" : ""}`}
                 />
                 <Lock size={12} className="absolute left-3.5 top-3 text-slate-400" />
                 <button 
                   type="button"
                   onClick={() => setShowPassword(p => !p)}
-                  className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-200"
+                  className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-200 cursor-pointer"
                 >
                   {showPassword ? <EyeOff size={13} /> : <Eye size={13} />}
                 </button>
@@ -211,7 +239,7 @@ export default function RegisterPage() {
                   type="password"
                   placeholder="••••••••"
                   {...register("confirmPassword")}
-                  className={`input w-full pl-9 pr-3 py-2 text-xs rounded-xl ${errors.confirmPassword ? "border-red-500" : ""}`}
+                  className={`input w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-theme-panel/60 border-theme text-theme-primary ${errors.confirmPassword ? "border-red-500" : ""}`}
                 />
                 <Lock size={12} className="absolute left-3.5 top-3 text-slate-400" />
               </div>
@@ -224,7 +252,7 @@ export default function RegisterPage() {
                 type="checkbox" 
                 id="agree" 
                 {...register("agree")}
-                className="mt-0.5 rounded border-[#1E1E2E] text-[#7C3AED] focus:ring-[#7C3AED]"
+                className="mt-0.5 rounded border-theme text-[#7C3AED] focus:ring-[#7C3AED] bg-theme-panel/60"
               />
               <label htmlFor="agree" className="text-[10px] text-theme-secondary leading-tight">
                 I agree to the Terms of Service and Privacy Policy.
@@ -235,7 +263,7 @@ export default function RegisterPage() {
             <button 
               type="submit"
               disabled={loading}
-              className="btn bg-[#7C3AED] hover:brightness-110 text-white font-bold text-xs py-2.5 rounded-xl w-full flex items-center justify-center gap-1.5 shadow-lg shadow-[#7C3AED]/20 mt-4"
+              className="btn bg-[#7C3AED] hover:brightness-110 text-white font-bold text-xs py-2.5 rounded-xl w-full flex items-center justify-center gap-1.5 shadow-lg shadow-[#7C3AED]/20 mt-4 cursor-pointer transition-all"
             >
               {loading ? <Loader2 size={13} className="spin" /> : "Create account"}
             </button>

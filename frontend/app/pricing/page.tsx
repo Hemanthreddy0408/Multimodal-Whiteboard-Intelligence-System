@@ -82,12 +82,19 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-theme-bg text-theme-primary flex flex-col font-sans overflow-x-hidden">
+    <div className="min-h-screen text-theme-primary flex flex-col font-sans overflow-x-hidden relative" style={{ background: "var(--bg)" }}>
       
+      {/* Background */}
+      <div className="mesh-bg">
+        <div className="mesh-orb mesh-orb-1" />
+        <div className="mesh-orb mesh-orb-2" />
+        <div className="mesh-orb mesh-orb-3" />
+      </div>
+
       {/* Navbar */}
       <Navbar />
 
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full text-center space-y-12">
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full text-center space-y-12 z-10">
         <div className="space-y-4 max-w-2xl mx-auto">
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-theme-primary">
             Simple, transparent pricing
@@ -102,7 +109,7 @@ export default function PricingPage() {
           <span className={`text-xs font-semibold ${!annual ? "text-theme-primary" : "text-theme-muted"}`}>Monthly</span>
           <button 
             onClick={() => setAnnual(p => !p)}
-            className="w-12 h-6 rounded-full bg-white/10 p-0.5 relative transition-all duration-300"
+            className="w-12 h-6 rounded-full bg-white/10 p-0.5 relative transition-all duration-300 cursor-pointer"
           >
             <div className={`w-5 h-5 rounded-full bg-[#7C3AED] transition-all duration-300 ${annual ? "translate-x-6" : ""}`} />
           </button>
@@ -119,11 +126,14 @@ export default function PricingPage() {
           {plans.map((p, idx) => (
             <div 
               key={idx} 
-              className={`p-8 rounded-2xl border bg-theme-panel text-left flex flex-col justify-between relative transition-all ${
-                p.featured 
-                  ? "border-[#7C3AED] shadow-xl shadow-[#7C3AED]/10 ring-1 ring-[#7C3AED]/50" 
-                  : "border-theme"
-              }`}
+              className="p-8 rounded-2xl border text-left flex flex-col justify-between relative transition-all slide-up hover:scale-[1.02]"
+              style={{
+                background: "rgba(12,12,26,0.7)",
+                borderColor: p.featured ? "rgba(124,58,237,0.5)" : "rgba(255,255,255,0.06)",
+                boxShadow: p.featured ? "0 10px 40px rgba(124,58,237,0.15), 0 0 0 1px rgba(124,58,237,0.2)" : "0 10px 30px rgba(0,0,0,0.3)",
+                backdropFilter: "blur(12px)",
+                animationDelay: `${idx * 0.08}s`
+              }}
             >
               {p.featured && (
                 <span className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 rounded-full bg-[#7C3AED] text-[9px] font-black uppercase text-white tracking-widest flex items-center gap-1">
@@ -154,7 +164,7 @@ export default function PricingPage() {
               <div className="pt-8">
                 <Link 
                   href={p.href}
-                  className={`btn text-center font-bold text-xs py-3 rounded-xl w-full block transition-all ${
+                  className={`btn text-center font-bold text-xs py-3 rounded-xl w-full block transition-all cursor-pointer ${
                     p.featured 
                       ? "bg-gradient-to-tr from-[#7C3AED] to-[#8B5CF6] text-white shadow-lg shadow-[#7C3AED]/20 hover:brightness-110" 
                       : "border border-theme text-theme-secondary hover:bg-white/5"
@@ -169,7 +179,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ Accordion Section */}
-      <section className="py-24 px-4 max-w-3xl mx-auto w-full space-y-12">
+      <section className="py-24 px-4 max-w-3xl mx-auto w-full space-y-12 z-10">
         <div className="text-center space-y-3">
           <HelpCircle className="text-[#7C3AED] mx-auto" size={32} />
           <h2 className="text-2xl font-bold tracking-tight text-theme-primary">Frequently Asked Questions</h2>
@@ -180,10 +190,17 @@ export default function PricingPage() {
           {faqs.map((f, i) => {
             const open = openFaq === i;
             return (
-              <div key={i} className="border border-theme rounded-xl bg-theme-panel/30 overflow-hidden">
+              <div 
+                key={i} 
+                className="border border-theme rounded-xl overflow-hidden transition-all"
+                style={{
+                  background: "rgba(12,12,26,0.4)",
+                  backdropFilter: "blur(8px)"
+                }}
+              >
                 <button
                   onClick={() => setOpenFaq(open ? null : i)}
-                  className="flex items-center justify-between w-full p-5 text-left font-bold text-xs text-theme-primary hover:bg-white/5 transition-all"
+                  className="flex items-center justify-between w-full p-5 text-left font-bold text-xs text-theme-primary hover:bg-white/5 transition-all cursor-pointer"
                 >
                   <span>{f.q}</span>
                   <ChevronDown size={14} className={`text-theme-secondary transition-all ${open ? "rotate-180" : ""}`} />
@@ -200,7 +217,7 @@ export default function PricingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-theme bg-theme-bg py-10 text-center text-xs text-theme-muted">
+      <footer className="mt-auto border-t border-theme bg-theme-bg/60 py-10 text-center text-xs text-theme-muted z-10">
         <span>© 2026 WhiteboardAI. All rights reserved.</span>
       </footer>
 

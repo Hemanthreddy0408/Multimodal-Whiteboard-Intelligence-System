@@ -228,139 +228,217 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-theme-bg text-theme-primary flex flex-col font-sans overflow-hidden h-screen">
-      
-      {/* Navbar */}
+    <div className="min-h-screen text-theme-primary flex flex-col font-sans overflow-hidden h-screen" style={{ background: "var(--bg)" }}>
+
+      {/* Animated background */}
+      <div className="mesh-bg">
+        <div className="mesh-orb mesh-orb-1" />
+        <div className="mesh-orb mesh-orb-2" />
+        <div className="mesh-orb mesh-orb-3" />
+      </div>
+
       <Navbar />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative z-10">
         <Sidebar />
 
-        {/* Contents */}
-        <main className="flex-grow p-4 overflow-hidden flex flex-col gap-4 min-w-0">
-          
-          {/* Top Panel Workspace Split */}
-          <div className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-4 overflow-hidden min-h-0">
-            
-            {/* Left Box: Drawing Canvas/Webcam/File Uploads */}
-            <div className="rounded-2xl border border-theme bg-theme-panel flex flex-col overflow-hidden">
-              
-              {/* Header tools */}
-              <div className="p-3 border-b border-theme flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-theme-bg/50">
-                <div className="flex bg-theme-bg border border-theme p-1 rounded-xl w-full sm:max-w-md">
+        <main className="flex-grow p-4 overflow-hidden flex flex-col gap-3 min-w-0">
+
+          {/* Top workspace split */}
+          <div className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-3 overflow-hidden min-h-0">
+
+            {/* Left: Input panel */}
+            <div
+              className="rounded-2xl flex flex-col overflow-hidden"
+              style={{
+                background: "rgba(10,10,22,0.75)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                backdropFilter: "blur(16px)",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+              }}
+            >
+              {/* Header */}
+              <div
+                className="p-3 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(0,0,0,0.2)" }}
+              >
+                {/* Mode switcher */}
+                <div
+                  className="flex p-1 rounded-xl w-full sm:max-w-sm"
+                  style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
                   {(["upload", "whiteboard", "webcam"] as InputMode[]).map(m => (
                     <button
                       key={m}
                       onClick={() => setMode(m)}
-                      className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                        mode === m 
-                          ? "bg-gradient-to-r from-[#7C3AED] to-[#8B5CF6] text-white shadow-lg shadow-[#7C3AED]/20 border border-[#7C3AED]/10" 
-                          : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
-                      }`}
+                      className="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                      style={{
+                        background: mode === m ? "linear-gradient(135deg, #7c3aed, #8b5cf6)" : "transparent",
+                        color: mode === m ? "#fff" : "#64748b",
+                        boxShadow: mode === m ? "0 2px 12px rgba(124,58,237,0.35)" : "none",
+                        transform: mode === m ? "scale(1)" : "scale(0.97)",
+                        transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)",
+                      }}
                     >
-                      {m === "upload" && <Upload size={13} />}
-                      {m === "whiteboard" && <Edit3 size={13} />}
-                      {m === "webcam" && <Camera size={13} />}
-                      <span>
-                        {m === "upload" ? "File Upload" : m === "whiteboard" ? "Draw Board" : "Live Camera"}
-                      </span>
+                      {m === "upload" && <Upload size={12} />}
+                      {m === "whiteboard" && <Edit3 size={12} />}
+                      {m === "webcam" && <Camera size={12} />}
+                      <span>{m === "upload" ? "File Upload" : m === "whiteboard" ? "Draw Board" : "Live Camera"}</span>
                     </button>
                   ))}
                 </div>
 
-                {previewUrl && (
-                  <button 
-                    onClick={() => setShowConfidenceOverlay(prev => !prev)}
-                    className={`btn text-xs px-3 py-1.5 flex items-center gap-1.5 rounded-lg ${
-                      showConfidenceOverlay 
-                        ? "bg-[#06B6D4]/20 text-[#06B6D4] border border-[#06B6D4]/30" 
-                        : "border border-[#1E1E2E] bg-white/5 text-slate-400 hover:bg-white/10"
-                    }`}
+                {/* Backend & overlay controls */}
+                <div className="flex items-center gap-2">
+                  {/* Backend status */}
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold"
+                    style={{
+                      background: backendStatus === "online" ? "rgba(16,185,129,0.08)" : backendStatus === "offline" ? "rgba(248,113,113,0.08)" : "rgba(245,158,11,0.08)",
+                      border: `1px solid ${backendStatus === "online" ? "rgba(16,185,129,0.2)" : backendStatus === "offline" ? "rgba(248,113,113,0.2)" : "rgba(245,158,11,0.2)"}`,
+                      color: backendStatus === "online" ? "#10b981" : backendStatus === "offline" ? "#f87171" : "#f59e0b",
+                    }}
                   >
-                    <Layers size={13} /> {showConfidenceOverlay ? "Hide Boxes" : "Show Boxes"}
-                  </button>
-                )}
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{
+                        background: backendStatus === "online" ? "#10b981" : backendStatus === "offline" ? "#f87171" : "#f59e0b",
+                        boxShadow: backendStatus === "online" ? "0 0 6px rgba(16,185,129,0.8)" : "none",
+                        animation: backendStatus === "online" ? "dot-anim 2s ease-in-out infinite" : "none",
+                      }}
+                    />
+                    {backendStatus === "online" ? "Live" : backendStatus === "offline" ? "Offline" : "Checking"}
+                  </div>
+
+                  {previewUrl && (
+                    <button
+                      onClick={() => setShowConfidenceOverlay(p => !p)}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all hover:scale-105"
+                      style={{
+                        background: showConfidenceOverlay ? "rgba(34,211,238,0.1)" : "rgba(255,255,255,0.04)",
+                        border: `1px solid ${showConfidenceOverlay ? "rgba(34,211,238,0.3)" : "rgba(255,255,255,0.07)"}`,
+                        color: showConfidenceOverlay ? "#22d3ee" : "#64748b",
+                      }}
+                    >
+                      <Layers size={11} /> {showConfidenceOverlay ? "Hide" : "Detect"}
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {/* Rendering Panel */}
-              <div className="flex-grow p-4 overflow-y-auto flex flex-col justify-between min-h-0">
-                
-                <div className="flex-grow flex items-center justify-center min-h-[220px]">
+              {/* Panel body */}
+              <div className="flex-grow p-4 overflow-y-auto flex flex-col gap-3 min-h-0">
+                <div className="flex-grow flex items-center justify-center min-h-[200px]">
                   {showConfidenceOverlay && previewUrl ? (
-                    <div className="relative w-full h-full max-h-[340px] flex items-center justify-center rounded-xl overflow-hidden border border-[#1E1E2E] bg-[#0A0A0F] p-2">
-                      <img src={previewUrl} className="max-w-full max-h-[320px] object-contain rounded-lg" alt="Diagram bounds" />
-                      
+                    <div
+                      className="relative w-full h-full max-h-[340px] flex items-center justify-center rounded-xl overflow-hidden p-2"
+                      style={{ border: "1px solid rgba(255,255,255,0.07)", background: "rgba(0,0,0,0.4)" }}
+                    >
+                      <img src={previewUrl} className="max-w-full max-h-[320px] object-contain rounded-lg" alt="Diagram" />
                       <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                         <div className="relative w-full h-full max-w-full max-h-[320px]">
-                          {/* DINOv2 BBoxes */}
                           <div className="absolute border border-emerald-500 bg-emerald-500/10 rounded" style={{ top: "8%", left: "10%", width: "80%", height: "82%" }}>
-                            <span className="absolute top-1 left-1 bg-emerald-500 text-white font-mono font-bold text-[7px] px-1 rounded shadow">Diagram (96%)</span>
+                            <span className="absolute top-1 left-1 bg-emerald-500 text-white font-mono font-bold text-[7px] px-1 rounded">Diagram (96%)</span>
                           </div>
-                          <div className="absolute border border-[#06B6D4] bg-[#06B6D4]/10 rounded" style={{ top: "2%", left: "30%", width: "40%", height: "18%" }}>
-                            <span className="absolute top-1 left-1 bg-[#06B6D4] text-slate-900 font-mono font-bold text-[7px] px-1 rounded shadow">Text (88%)</span>
+                          <div className="absolute border border-cyan-400 bg-cyan-400/10 rounded" style={{ top: "2%", left: "30%", width: "40%", height: "18%" }}>
+                            <span className="absolute top-1 left-1 bg-cyan-400 text-slate-900 font-mono font-bold text-[7px] px-1 rounded">Text (88%)</span>
                           </div>
                           <div className="absolute border border-amber-500 bg-amber-500/10 rounded" style={{ top: "72%", left: "20%", width: "60%", height: "15%" }}>
-                            <span className="absolute top-1 left-1 bg-amber-500 text-white font-mono font-bold text-[7px] px-1 rounded shadow">Annotation (74%)</span>
+                            <span className="absolute top-1 left-1 bg-amber-500 text-white font-mono font-bold text-[7px] px-1 rounded">Annotation (74%)</span>
                           </div>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="w-full h-full">
-                      {mode === "upload" && (
-                        <UploadPanel onAnalyze={handleAnalyze} analyzing={analyzing} progress={progress} previewUrl={previewUrl} backendOnline={backendStatus !== "offline"} />
-                      )}
-                      {mode === "whiteboard" && (
-                        <WhiteboardCanvas onAnalyze={handleAnalyze} analyzing={analyzing} />
-                      )}
-                      {mode === "webcam" && (
-                        <WebcamPanel onAnalyze={handleAnalyze} analyzing={analyzing} />
-                      )}
+                      {mode === "upload" && <UploadPanel onAnalyze={handleAnalyze} analyzing={analyzing} progress={progress} previewUrl={previewUrl} backendOnline={backendStatus !== "offline"} />}
+                      {mode === "whiteboard" && <WhiteboardCanvas onAnalyze={handleAnalyze} analyzing={analyzing} />}
+                      {mode === "webcam" && <WebcamPanel onAnalyze={handleAnalyze} analyzing={analyzing} />}
                     </div>
                   )}
                 </div>
 
-                {/* Score meters */}
+                {/* Confidence bar */}
                 {result && (
-                  <div className="mt-4 p-3.5 bg-[#0A0A0F] rounded-xl border border-[#1E1E2E] flex justify-between items-center">
+                  <div
+                    className="p-3.5 rounded-xl flex justify-between items-center slide-up"
+                    style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  >
                     <div>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Detected Diagram</p>
-                      <p className="text-xs font-bold text-slate-200 mt-0.5 capitalize">{result.diagram_type || "general"}</p>
+                      <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: "#475569" }}>Detected</p>
+                      <p className="text-xs font-bold capitalize mt-0.5" style={{ color: "#f1f5f9" }}>{result.diagram_type || "general"}</p>
                     </div>
-                    <div className="w-32 text-right">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Confidence</span>
-                        <span className="text-xs font-bold text-emerald-400">{Math.round((result.confidence || 0.85) * 100)}%</span>
+                    <div className="w-28 text-right">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "#475569" }}>Confidence</span>
+                        <span className="text-xs font-black" style={{ color: "#10b981" }}>{Math.round((result.confidence || 0.85) * 100)}%</span>
                       </div>
-                      <div className="progress-track" style={{ height: 4 }}>
-                        <div className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full" style={{ width: `${(result.confidence || 0.85) * 100}%` }} />
+                      <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${(result.confidence || 0.85) * 100}%`,
+                            background: "linear-gradient(90deg, #10b981, #34d399)",
+                            boxShadow: "0 0 8px rgba(16,185,129,0.5)",
+                            transition: "width 0.8s ease",
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
                 )}
-
               </div>
             </div>
 
-            {/* Right Box: Code output & Explanation */}
-            <div className="rounded-2xl border border-theme bg-theme-panel flex flex-col overflow-hidden">
+            {/* Right: Analysis panel */}
+            <div
+              className="rounded-2xl flex flex-col overflow-hidden"
+              style={{
+                background: "rgba(10,10,22,0.75)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                backdropFilter: "blur(16px)",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+              }}
+            >
               <AnalysisPanel result={result} analyzing={analyzing} progress={progress} previewUrl={previewUrl} />
             </div>
-
           </div>
 
-          {/* Bottom Box: Chat Q&A refinement query */}
-          <div className="rounded-2xl border border-theme bg-theme-panel p-4 flex flex-col flex-shrink-0">
-            {/* Scrollable logs */}
-            <div className="max-h-[100px] overflow-y-auto space-y-2 mb-3 pr-2 scrollbar-thin">
+          {/* Bottom: Chat */}
+          <div
+            className="rounded-2xl p-3.5 flex flex-col flex-shrink-0"
+            style={{
+              background: "rgba(10,10,22,0.75)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              backdropFilter: "blur(16px)",
+            }}
+          >
+            {/* Message list */}
+            <div className="max-h-24 overflow-y-auto space-y-2 mb-3 pr-1">
               {chatMessages.map(msg => (
-                <div key={msg.id} className={`flex gap-3 text-xs leading-relaxed ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${msg.role === "user" ? "bg-[#7C3AED]" : "bg-white/5 border border-theme"}`}>
-                    {msg.role === "user" ? <span className="text-white text-[9px] font-bold">U</span> : <span className="text-[#7C3AED] text-[9px]">🤖</span>}
+                <div key={msg.id} className={`flex gap-2.5 text-xs leading-relaxed ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+                  <div
+                    className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: msg.role === "user" ? "linear-gradient(135deg, #7c3aed, #8b5cf6)" : "rgba(255,255,255,0.05)",
+                      border: msg.role === "user" ? "none" : "1px solid rgba(255,255,255,0.08)",
+                      boxShadow: msg.role === "user" ? "0 2px 8px rgba(124,58,237,0.3)" : "none",
+                    }}
+                  >
+                    <span className="text-[9px] font-bold" style={{ color: msg.role === "user" ? "#fff" : "#8b5cf6" }}>
+                      {msg.role === "user" ? "U" : "AI"}
+                    </span>
                   </div>
-                  <div className={`px-3 py-1.5 rounded-xl max-w-[85%] ${msg.role === "user" ? "bg-[#7C3AED]/20 text-indigo-100 border border-[#7C3AED]/15" : "bg-white/5 text-slate-300 border border-white/5"}`}>
+                  <div
+                    className="px-3 py-1.5 rounded-xl max-w-[85%]"
+                    style={{
+                      background: msg.role === "user" ? "rgba(124,58,237,0.18)" : "rgba(255,255,255,0.04)",
+                      border: `1px solid ${msg.role === "user" ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.06)"}`,
+                      color: msg.role === "user" ? "#c4b5fd" : "#94a3b8",
+                    }}
+                  >
                     {msg.isLoading ? (
-                      <div className="flex gap-1 py-1"><div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" /></div>
+                      <div className="flex gap-1 py-0.5"><div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" /></div>
                     ) : (
                       <p className="whitespace-pre-wrap">{msg.content}</p>
                     )}
@@ -370,52 +448,57 @@ export default function Home() {
               <div ref={chatEndRef} />
             </div>
 
-            {/* Grounded Query Pill Bar */}
-            <div className="flex items-center gap-2 p-1.5 rounded-xl bg-[#0A0A0F] border border-[#1E1E2E]">
-              <input 
-                type="text" 
+            {/* Input bar */}
+            <div
+              className="flex items-center gap-2 p-1.5 rounded-xl"
+              style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.07)" }}
+            >
+              <input
+                type="text"
                 disabled={chatLoading}
-                placeholder={result ? "Ask assistant to translate, edit or explain... (e.g. 'translate to Java', 'explain complexity')" : "Select and analyze a diagram to begin workspace chat..."}
-                className="flex-1 bg-transparent text-xs text-slate-200 outline-none px-2.5"
+                placeholder={result ? "Ask to translate, edit or explain..." : "Analyze a diagram to begin chat..."}
+                className="flex-1 bg-transparent text-xs outline-none px-2.5"
+                style={{ color: "#e2e8f0" }}
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChatSubmit(chatInput); } }}
               />
-              <button 
+              <button
                 onClick={() => handleChatSubmit(chatInput)}
                 disabled={!chatInput.trim() || chatLoading}
-                className="btn bg-[#7C3AED] hover:brightness-110 text-white w-8 h-8 rounded-lg p-0 flex items-center justify-center disabled:opacity-50"
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-40 hover:scale-110 active:scale-95"
+                style={{
+                  background: "linear-gradient(135deg, #7c3aed, #8b5cf6)",
+                  boxShadow: "0 2px 12px rgba(124,58,237,0.4)",
+                }}
               >
-                {chatLoading ? <Loader2 size={13} className="spin" /> : <Send size={13} />}
+                {chatLoading ? <Loader2 size={13} className="spin text-white" /> : <Send size={13} className="text-white" />}
               </button>
             </div>
 
-            {/* Suggestions chips */}
+            {/* Suggestion chips */}
             {result && (
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {[
-                  "Explain this simply 🙋",
-                  "Translate code to Java ☕",
-                  "Convert to TypeScript ⚡",
-                  "What's the space/time complexity? ⏱",
-                  "Add comments 📝",
-                ].map(q => (
-                  <button 
-                    key={q} 
+                {["Explain simply 🙋", "Java ☕", "TypeScript ⚡", "Complexity ⏱", "Add comments 📝"].map(q => (
+                  <button
+                    key={q}
                     onClick={() => handleChatSubmit(q)}
-                    className="text-[9px] font-semibold px-2.5 py-1 rounded-full border border-[#1E1E2E] bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10 transition-all"
+                    className="text-[9px] font-semibold px-2.5 py-1 rounded-full transition-all hover:scale-105 active:scale-95"
+                    style={{
+                      border: "1px solid rgba(139,92,246,0.2)",
+                      background: "rgba(139,92,246,0.06)",
+                      color: "#94a3b8",
+                    }}
                   >
                     {q}
                   </button>
                 ))}
               </div>
             )}
-
           </div>
 
         </main>
       </div>
-
     </div>
   );
 }

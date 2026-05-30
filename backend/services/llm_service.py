@@ -220,7 +220,7 @@ Think step by step. Then respond with EXACTLY this JSON structure (no extra text
 
     # ─── Provider Implementations ──────────────────────────────────────────────
 
-    async def _call_openai(self, prompt: str, image_bytes: Optional[bytes]) -> Optional[Dict]:
+    async def _call_openai(self, prompt: str, image_bytes: Optional[bytes], force_json: bool = True) -> Optional[Any]:
         """
         Call GPT-4o (or gpt-4o-mini for cost savings).
         
@@ -251,25 +251,32 @@ Think step by step. Then respond with EXACTLY this JSON structure (no extra text
             else:
                 messages = [{"role": "user", "content": prompt}]
             
-            response = await client.chat.completions.create(
-                model="gpt-4o",           # Best model for multimodal
-                messages=messages,
-                temperature=0.1,          # Low temperature = more deterministic output
-                max_tokens=2000,
-                response_format={"type": "json_object"},  # Force JSON output
-            )
+            kwargs = {
+                "model": "gpt-4o",
+                "messages": messages,
+                "temperature": 0.1,
+                "max_tokens": 2000,
+            }
+            if force_json:
+                kwargs["response_format"] = {"type": "json_object"}
+                
+            response = await client.chat.completions.create(**kwargs)
             
             content = response.choices[0].message.content
-            result = json.loads(content)
-            result["_model_used"] = "gpt-4o"
-            log.info("✅ GPT-4o response received")
-            return result
+            if force_json:
+                result = json.loads(content)
+                result["_model_used"] = "gpt-4o"
+                log.info("✅ GPT-4o response received")
+                return result
+            else:
+                log.info("✅ GPT-4o response received (plain text)")
+                return content
             
         except Exception as e:
             log.error(f"OpenAI error: {e}")
             return None
 
-    async def _call_gemini(self, prompt: str, image_bytes: Optional[bytes]) -> Optional[Dict]:
+    async def _call_gemini(self, prompt: str, image_bytes: Optional[bytes], force_json: bool = True) -> Optional[Any]:
         """
         Call Google Gemini 1.5 Pro.
         
@@ -306,22 +313,25 @@ Think step by step. Then respond with EXACTLY this JSON structure (no extra text
                 )
             )
             
-            # Extract JSON from response
             text = response.text
-            # Find JSON block if model added extra text
-            start = text.find("{")
-            end = text.rfind("}") + 1
-            if start != -1 and end > start:
-                result = json.loads(text[start:end])
-                result["_model_used"] = "gemini-1.5-pro"
-                log.info("✅ Gemini response received")
-                return result
+            if force_json:
+                # Find JSON block if model added extra text
+                start = text.find("{")
+                end = text.rfind("}") + 1
+                if start != -1 and end > start:
+                    result = json.loads(text[start:end])
+                    result["_model_used"] = "gemini-1.5-pro"
+                    log.info("✅ Gemini response received")
+                    return result
+            else:
+                log.info("✅ Gemini response received (plain text)")
+                return text
                 
         except Exception as e:
             log.error(f"Gemini error: {e}")
         return None
 
-    async def _call_ollama(self, prompt: str) -> Optional[Dict]:
+    async def _call_ollama(self, prompt: str, force_json: bool = True) -> Optional[Any]:
         """
         Call Llama 3 via Ollama (100% local, free, private).
         
@@ -345,9 +355,10 @@ Think step by step. Then respond with EXACTLY this JSON structure (no extra text
                 "model": "llama3",
                 "messages": [{"role": "user", "content": prompt}],
                 "stream": False,
-                "format": "json",           # Force JSON output
                 "options": {"temperature": 0.1}
             }
+            if force_json:
+                payload["format"] = "json"
             
             async with httpx.AsyncClient(timeout=120.0) as client:
                 response = await client.post(
@@ -359,13 +370,17 @@ Think step by step. Then respond with EXACTLY this JSON structure (no extra text
                     data = response.json()
                     content = data["message"]["content"]
                     
-                    start = content.find("{")
-                    end = content.rfind("}") + 1
-                    if start != -1:
-                        result = json.loads(content[start:end])
-                        result["_model_used"] = "llama3-local"
-                        log.info("✅ Ollama/Llama3 response received")
-                        return result
+                    if force_json:
+                        start = content.find("{")
+                        end = content.rfind("}") + 1
+                        if start != -1:
+                            result = json.loads(content[start:end])
+                            result["_model_used"] = "llama3-local"
+                            log.info("✅ Ollama/Llama3 response received")
+                            return result
+                    else:
+                        log.info("✅ Ollama/Llama3 response received (plain text)")
+                        return content
                         
         except Exception as e:
             log.error(f"Ollama error: {e}")
@@ -408,17 +423,17 @@ USER QUESTION: {question}
 
 Answer concisely and accurately. If generating code, make it complete and runnable."""
         
-        result = await self._call_openai(prompt, None)
+        result = await self._call_openai(prompt, None, force_json=False)
         if result:
-            return result.get("explanation", str(result))
+            return result
         
-        result = await self._call_gemini(prompt, None)
+        result = await self._call_gemini(prompt, None, force_json=False)
         if result:
-            return result.get("explanation", str(result))
+            return result
         
-        result = await self._call_ollama(prompt)
+        result = await self._call_ollama(prompt, force_json=False)
         if result:
-            return result.get("explanation", str(result))
+            return result
         
         # Fallback to local mock answering if no keys/services are configured
         return self._generate_mock_chat_answer(question, context)
@@ -624,9 +639,9 @@ Return ONLY the {target_language} code with comments. No extra text."""
         
         for call_fn in [self._call_openai, self._call_gemini]:
             try:
-                result = await call_fn(prompt, None)
-                if result and "code" in result:
-                    return result["code"]
+                result = await call_fn(prompt, None, force_json=False)
+                if result:
+                    return result
             except Exception:
                 continue
         

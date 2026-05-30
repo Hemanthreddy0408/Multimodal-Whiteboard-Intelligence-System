@@ -57,10 +57,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-theme-bg">
+    <div className="flex min-h-screen text-theme-primary relative overflow-hidden h-screen" style={{ background: "var(--bg)" }}>
       
+      {/* Background */}
+      <div className="mesh-bg">
+        <div className="mesh-orb mesh-orb-1" />
+        <div className="mesh-orb mesh-orb-2" />
+        <div className="mesh-orb mesh-orb-3" />
+      </div>
+
       {/* Left panel decoration: animated pipeline nodes */}
-      <div className="hidden lg:flex lg:w-1/2 bg-theme-panel border-r border-theme flex-col justify-center items-center p-12 relative overflow-hidden">
+      <div 
+        className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 relative overflow-hidden z-10"
+        style={{
+          background: "linear-gradient(135deg, rgba(12,12,26,0.85), rgba(20,14,40,0.75))",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+          backdropFilter: "blur(20px)"
+        }}
+      >
         {/* Abstract background grids */}
         <div className="absolute inset-0 opacity-5 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]" />
         
@@ -76,7 +90,13 @@ export default function LoginPage() {
           <p className="text-xs text-theme-secondary">Our deep visual classifier maps inputs to structured adjacency graphs using local model heads.</p>
           
           {/* Animated node diagram mockup */}
-          <div className="relative w-72 h-48 mx-auto border border-theme rounded-2xl bg-theme-bg/80 p-6 flex flex-col justify-between items-center shadow-inner">
+          <div 
+            className="relative w-72 h-48 mx-auto border rounded-2xl p-6 flex flex-col justify-between items-center shadow-inner"
+            style={{
+              background: "rgba(12,12,26,0.6)",
+              borderColor: "rgba(255,255,255,0.05)",
+            }}
+          >
             <div className="flex justify-between w-full">
               <div className="w-10 h-10 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-xs font-bold text-[#7C3AED] animate-[pulse_2s_infinite]">Image</div>
               <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-xs font-bold text-cyan-400 animate-[pulse_2.5s_infinite]">OCR</div>
@@ -97,8 +117,16 @@ export default function LoginPage() {
       </div>
 
       {/* Right panel: auth card form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
-        <div className="w-full max-w-sm space-y-6 bg-theme-panel border border-theme p-8 rounded-2xl shadow-xl">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 relative z-10">
+        <div 
+          className="w-full max-w-sm space-y-6 p-8 rounded-2xl shadow-2xl relative z-10 slide-up"
+          style={{
+            background: "rgba(12,12,26,0.75)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(16px)",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(139,92,246,0.05)"
+          }}
+        >
           <div className="text-center space-y-1">
             <h1 className="text-xl font-bold text-theme-primary">Welcome back</h1>
             <p className="text-xs text-theme-secondary">Sign in to your workspace dashboard</p>
@@ -109,7 +137,7 @@ export default function LoginPage() {
             <button 
               type="button"
               onClick={() => socialLogin("google")}
-              className="flex items-center justify-center gap-1.5 border border-theme hover:bg-white/5 py-2.5 rounded-xl text-xs font-semibold text-theme-primary transition-all"
+              className="flex items-center justify-center gap-1.5 border border-theme bg-white/5 hover:bg-white/10 py-2.5 rounded-xl text-xs font-semibold text-theme-primary transition-all cursor-pointer"
             >
               <svg className="w-3.5 h-3.5 mr-0.5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -121,7 +149,7 @@ export default function LoginPage() {
             <button 
               type="button"
               onClick={() => socialLogin("github")}
-              className="flex items-center justify-center gap-1.5 border border-theme hover:bg-white/5 py-2.5 rounded-xl text-xs font-semibold text-theme-primary transition-all"
+              className="flex items-center justify-center gap-1.5 border border-theme bg-white/5 hover:bg-white/10 py-2.5 rounded-xl text-xs font-semibold text-theme-primary transition-all cursor-pointer"
             >
               <svg className="w-3.5 h-3.5 mr-0.5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.479C19.138 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
@@ -144,7 +172,7 @@ export default function LoginPage() {
                   type="email"
                   placeholder="name@company.com"
                   {...register("email")}
-                  className={`input w-full pl-9 pr-3 py-2 text-xs rounded-xl ${errors.email ? "border-red-500" : ""}`}
+                  className={`input w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-theme-panel/60 border-theme text-theme-primary ${errors.email ? "border-red-500" : ""}`}
                 />
                 <Mail size={12} className="absolute left-3.5 top-3 text-slate-400" />
               </div>
@@ -161,13 +189,13 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   {...register("password")}
-                  className={`input w-full pl-9 pr-9 py-2 text-xs rounded-xl ${errors.password ? "border-red-500" : ""}`}
+                  className={`input w-full pl-9 pr-9 py-2 text-xs rounded-xl bg-theme-panel/60 border-theme text-theme-primary ${errors.password ? "border-red-500" : ""}`}
                 />
                 <Lock size={12} className="absolute left-3.5 top-3 text-slate-400" />
                 <button 
                   type="button"
                   onClick={() => setShowPassword(p => !p)}
-                  className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-200"
+                  className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-200 cursor-pointer"
                 >
                   {showPassword ? <EyeOff size={13} /> : <Eye size={13} />}
                 </button>
@@ -178,7 +206,7 @@ export default function LoginPage() {
             <button 
               type="submit"
               disabled={loading}
-              className="btn bg-[#7C3AED] hover:brightness-110 text-white font-bold text-xs py-2.5 rounded-xl w-full flex items-center justify-center gap-1.5 shadow-lg shadow-[#7C3AED]/20 mt-6"
+              className="btn bg-[#7C3AED] hover:brightness-110 text-white font-bold text-xs py-2.5 rounded-xl w-full flex items-center justify-center gap-1.5 shadow-lg shadow-[#7C3AED]/20 mt-6 cursor-pointer transition-all"
             >
               {loading ? <Loader2 size={13} className="spin" /> : "Sign in"}
             </button>

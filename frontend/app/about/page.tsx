@@ -65,12 +65,19 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-slate-100 flex flex-col font-sans overflow-hidden h-screen">
+    <div className="min-h-screen text-theme-primary flex flex-col font-sans overflow-hidden h-screen" style={{ background: "var(--bg)" }}>
       
+      {/* Background */}
+      <div className="mesh-bg">
+        <div className="mesh-orb mesh-orb-1" />
+        <div className="mesh-orb mesh-orb-2" />
+        <div className="mesh-orb mesh-orb-3" />
+      </div>
+
       {/* Navbar */}
       <Navbar />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative z-10">
         {status === "authenticated" && <Sidebar />}
 
         <main className="flex-grow p-6 overflow-y-auto space-y-6 max-w-4xl mx-auto w-full">
@@ -79,35 +86,47 @@ export default function AboutPage() {
           <div className="flex items-center justify-between">
             <Link 
               href={status === "authenticated" ? "/dashboard" : "/landing"} 
-              className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+              className="flex items-center gap-2 text-xs font-semibold text-theme-secondary hover:text-theme-primary transition-all"
             >
               <ArrowLeft size={14} /> Back to {status === "authenticated" ? "Dashboard" : "Home"}
             </Link>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Local Engine Online</span>
+              <span className="text-[10px] font-bold text-theme-secondary uppercase tracking-widest">Local Engine Online</span>
             </div>
           </div>
 
           {/* Header */}
           <div className="text-center space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 via-indigo-200 to-cyan-200 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-[#818cf8] via-[#a78bfa] to-[#22d3ee] bg-clip-text text-transparent">
               AI Whiteboard Compiler Pipeline
             </h1>
-            <p className="text-xs text-slate-400 max-w-lg mx-auto">
+            <p className="text-xs text-theme-secondary max-w-lg mx-auto">
               Learn how our multimodal system converts drawings, handwritten graphs, and flowcharts into functional source code.
             </p>
           </div>
 
           {/* Stepper Card */}
-          <div className="p-8 rounded-2xl border border-[#1E1E2E] bg-[#13131A] space-y-8 shadow-xl">
-            <div className="relative border-l-2 border-[#1E1E2E] ml-4 pl-8 space-y-12">
+          <div 
+            className="p-8 rounded-2xl border border-theme shadow-xl slide-up"
+            style={{
+              background: "rgba(12,12,26,0.7)",
+              backdropFilter: "blur(12px)",
+            }}
+          >
+            <div className="relative border-l border-theme ml-4 pl-8 space-y-12">
               
-              {steps.map((step) => (
+              {steps.map((step, idx) => (
                 <div key={step.number} className="relative">
                   
                   {/* Step Circle Indicator */}
-                  <div className="absolute left-[-45px] top-0 w-8 h-8 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#8B5CF6] flex items-center justify-center font-bold text-xs text-white shadow-lg shadow-[#7C3AED]/20">
+                  <div 
+                    className="absolute left-[-45px] top-0 w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs text-white shadow-lg shadow-[#7C3AED]/20 transition-all"
+                    style={{
+                      background: "linear-gradient(135deg, #7c3aed, #8b5cf6)",
+                      animation: `scale-in 0.3s cubic-bezier(0.34,1.56,0.64,1) ${idx * 0.05}s both`,
+                    }}
+                  >
                     {step.number}
                   </div>
 
@@ -115,10 +134,10 @@ export default function AboutPage() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <step.icon size={16} className="text-[#06B6D4]" />
-                      <h3 className="font-bold text-sm text-slate-100">{step.title}</h3>
+                      <h3 className="font-bold text-sm text-theme-primary">{step.title}</h3>
                     </div>
                     <p className="text-[10px] text-[#7C3AED] font-semibold uppercase tracking-wider">{step.subtitle}</p>
-                    <p className="text-xs text-slate-400 leading-relaxed">{step.desc}</p>
+                    <p className="text-xs text-theme-secondary leading-relaxed">{step.desc}</p>
                   </div>
 
                 </div>
@@ -129,25 +148,43 @@ export default function AboutPage() {
 
           {/* Footer Info Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-            <div className="p-5 rounded-2xl border border-[#1E1E2E] bg-[#13131A] flex gap-3.5">
+            <div 
+              className="p-5 rounded-2xl border border-theme flex gap-3.5"
+              style={{
+                background: "rgba(12,12,26,0.7)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
               <Cpu className="text-[#7C3AED] flex-shrink-0" size={18} />
               <div>
-                <h4 className="text-xs font-bold text-slate-200">Local PyTorch / CV2</h4>
-                <p className="text-[10px] text-slate-400 mt-1.5 leading-normal">HuggingFace transformers pipeline, DINOv2 classification features, and OpenCV contours processed locally.</p>
+                <h4 className="text-xs font-bold text-theme-primary">Local PyTorch / CV2</h4>
+                <p className="text-[10px] text-theme-secondary mt-1.5 leading-normal">HuggingFace transformers pipeline, DINOv2 classification features, and OpenCV contours processed locally.</p>
               </div>
             </div>
-            <div className="p-5 rounded-2xl border border-[#1E1E2E] bg-[#13131A] flex gap-3.5">
+            <div 
+              className="p-5 rounded-2xl border border-theme flex gap-3.5"
+              style={{
+                background: "rgba(12,12,26,0.7)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
               <Layers className="text-purple-400 flex-shrink-0" size={18} />
               <div>
-                <h4 className="text-xs font-bold text-slate-200">Redis Language Cache</h4>
-                <p className="text-[10px] text-slate-400 mt-1.5 leading-normal">Intermediate visual representations are cached to guarantee instant target language switching without re-run.</p>
+                <h4 className="text-xs font-bold text-theme-primary">Redis Language Cache</h4>
+                <p className="text-[10px] text-theme-secondary mt-1.5 leading-normal">Intermediate visual representations are cached to guarantee instant target language switching without re-run.</p>
               </div>
             </div>
-            <div className="p-5 rounded-2xl border border-[#1E1E2E] bg-[#13131A] flex gap-3.5">
+            <div 
+              className="p-5 rounded-2xl border border-theme flex gap-3.5"
+              style={{
+                background: "rgba(12,12,26,0.7)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
               <ShieldCheck className="text-[#06B6D4] flex-shrink-0" size={18} />
               <div>
-                <h4 className="text-xs font-bold text-slate-200">PostgreSQL Session Sync</h4>
-                <p className="text-[10px] text-slate-400 mt-1.5 leading-normal">Every capture is recorded into a persistent relation allowing full workspace restoration at any time.</p>
+                <h4 className="text-xs font-bold text-theme-primary">PostgreSQL Session Sync</h4>
+                <p className="text-[10px] text-theme-secondary mt-1.5 leading-normal">Every capture is recorded into a persistent relation allowing full workspace restoration at any time.</p>
               </div>
             </div>
           </div>
