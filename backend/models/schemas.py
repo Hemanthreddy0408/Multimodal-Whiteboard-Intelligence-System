@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 # ─── SQLAlchemy ORM Models (optional — need PostgreSQL + sqlalchemy) ───────────
 try:
-    from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Float, JSON
+    from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Float, JSON, Boolean
     from sqlalchemy.dialects.postgresql import UUID as PG_UUID
     from sqlalchemy.orm import relationship
     from core.database import Base
@@ -45,8 +45,19 @@ try:
             diagram_type = Column(String)
             elements_json = Column(JSON)
             embedding_id = Column(String)
+            embedding_vector = Column(Text)  # Stringified 1024-dim vector for pgvector
             confidence_score = Column(Float)
             created_at = Column(DateTime, default=datetime.utcnow)
+            
+            # Telemetry metrics
+            latency_preprocessing = Column(Float)
+            latency_segmentation = Column(Float)
+            latency_ocr = Column(Float)
+            latency_embedding = Column(Float)
+            latency_classification = Column(Float)
+            latency_llm = Column(Float)
+            estimated_cost = Column(Float)
+            low_confidence = Column(Boolean, default=False)
             session = relationship("DiagramSession", back_populates="uploads")
             generated_codes = relationship("GeneratedCode", back_populates="upload")
 

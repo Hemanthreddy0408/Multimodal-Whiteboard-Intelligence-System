@@ -36,8 +36,13 @@ frontend/.env
 
 # Local models (vit_h_4b8939.pth, etc. can be too large for standard git)
 backend/models/*.pth
+!backend/models/classifier_head.pth
 backend/models/*.bin
 backend/models/*.onnx
 
 # Docker
 docker/data/
+
+# Local database storage
+qdrant_storage/
+

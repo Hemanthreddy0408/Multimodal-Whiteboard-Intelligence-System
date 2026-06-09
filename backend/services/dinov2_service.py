@@ -70,7 +70,7 @@ class DINOv2EmbeddingService:
         self.model = None
         self.processor = None
         self._loaded = False
-        self.embedding_dim = 1024  # DINOv2-large output dimension
+        self.embedding_dim = 384  # DINOv2-small output dimension
 
     def _load_model(self):
         """Lazy-load DINOv2-large model."""

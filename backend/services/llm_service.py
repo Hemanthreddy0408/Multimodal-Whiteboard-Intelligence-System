@@ -40,8 +40,21 @@ import asyncio
 import logging
 from typing import Optional, List, Dict, Any
 from enum import Enum
+from pydantic import BaseModel, Field
 
 log = logging.getLogger(__name__)
+
+class LLMAnalysisResponse(BaseModel):
+    diagram_type_confirmed: str = Field(description="Confirmed diagram type: flowchart, dsa, architecture, er_diagram, class_diagram, or unknown")
+    explanation: str = Field(description="Detailed explanation of the diagram elements and flow")
+    summary: str = Field(description="One-sentence high-level summary of the diagram")
+    relationships: List[Dict[str, Any]] = Field(default_factory=list, description="List of connections between components")
+    algorithm_or_pattern: Optional[str] = Field(None, description="Identified algorithm or design pattern")
+    code: Optional[str] = Field(None, description="Generated code representing the diagram")
+    code_explanation: Optional[str] = Field("", description="Line-by-line explanation of the code")
+    complexity: Dict[str, str] = Field(default_factory=dict, description="Estimated time and space complexity")
+    multi_language_suggestions: List[str] = Field(default_factory=list, description="Other recommended languages")
+    confidence: float = Field(0.8, description="Classification confidence")
 
 
 class LLMProvider(str, Enum):
@@ -104,52 +117,79 @@ class LLMService:
         pil_image_bytes: Optional[bytes] = None,
     ) -> Dict[str, Any]:
         """
-        Main analysis method — orchestrates the LLM call.
-        
-        PROMPT ENGINEERING STRATEGY:
-        
-        We use a STRUCTURED PROMPT that:
-        1. Sets the role: "You are an expert software architect"
-        2. Provides all extracted data as structured JSON
-        3. Includes RAG context (similar diagrams found in Qdrant)
-        4. Gives clear task instructions
-        5. Requires JSON output (prevents hallucinations, easier parsing)
-        
-        The model sees:
-        - diagram_type: "flowchart" / "dsa" / "architecture" / "er_diagram"
-        - elements: [{type: "box", text: "Start", bbox: [10, 20, 100, 50]}, ...]
-        - ocr_text: "Start → Process Data → Validate → End"
-        - similar_diagrams: [{"type": "flowchart", "summary": "...similar diagram..."}]
-        - user_question: "Generate Python code for this sorting algorithm"
-        
-        Returns:
-            dict with: explanation, code, summary, relationships, diagram_type_confirmed
+        Main analysis method — orchestrates the LLM call with validation, retries, and fallbacks.
         """
-        
-        # Build the structured prompt
         prompt = self._build_analysis_prompt(
             diagram_type, elements, ocr_text, 
             similar_diagrams, user_question, target_language
         )
         
-        log.info(f"🤖 Calling {provider} LLM for diagram analysis...")
-        
+        def validate_json_response(data: Any) -> Optional[Dict[str, Any]]:
+            if not isinstance(data, dict):
+                return None
+            try:
+                # Validate with Pydantic model
+                validated = LLMAnalysisResponse(**data)
+                return validated.model_dump()
+            except Exception as val_err:
+                log.warning(f"Schema validation failed: {val_err}. Manually patching defaults...")
+                # Fallback / manual correction on validation failure
+                return {
+                    "diagram_type_confirmed": data.get("diagram_type_confirmed") or diagram_type or "unknown",
+                    "explanation": data.get("explanation") or "Diagram analyzed successfully.",
+                    "summary": data.get("summary") or "Diagram analysis summary.",
+                    "relationships": data.get("relationships") or [],
+                    "algorithm_or_pattern": data.get("algorithm_or_pattern") or data.get("algorithm_pattern") or None,
+                    "code": data.get("code") or data.get("generated_code") or None,
+                    "code_explanation": data.get("code_explanation") or "",
+                    "complexity": data.get("complexity") or {},
+                    "multi_language_suggestions": data.get("multi_language_suggestions") or [],
+                    "confidence": float(data.get("confidence", 0.75))
+                }
+
         # Try providers in order of preference
         response = None
         
-        if provider == LLMProvider.OPENAI or response is None:
+        # 1. Call OpenAI (GPT-4o) if selected or default
+        if provider == LLMProvider.OPENAI:
+            log.info("🤖 Calling OpenAI GPT-4o...")
             response = await self._call_openai(prompt, pil_image_bytes)
-        
-        if response is None and (provider == LLMProvider.GEMINI or True):
+            validated_response = validate_json_response(response)
+            
+            # Retry once if validation or API fails
+            if validated_response is None:
+                log.warning("⚠️ OpenAI validation or API call failed. Retrying with explicit warning...")
+                retry_prompt = prompt + "\n\n⚠️ RETRY WARNING: Your previous response was invalid JSON or missed required fields. You MUST output EXACTLY the JSON schema specified."
+                response = await self._call_openai(retry_prompt, pil_image_bytes)
+                validated_response = validate_json_response(response)
+                
+            if validated_response:
+                validated_response["_model_used"] = "gpt-4o"
+                return validated_response
+                
+        # 2. Fallback to Gemini 1.5 Pro
+        if response is None:
+            log.info("🤖 Falling back to Gemini 1.5 Pro...")
             response = await self._call_gemini(prompt, pil_image_bytes)
-        
+            validated_response = validate_json_response(response)
+            if validated_response:
+                validated_response["_model_used"] = "gemini-1.5-pro"
+                return validated_response
+                
+        # 3. Fallback to local Ollama Llama 3
         if response is None:
+            log.info("🤖 Falling back to local Ollama...")
             response = await self._call_ollama(prompt)
-        
-        if response is None:
-            response = self._get_error_response(user_question)
-        
-        return response
+            validated_response = validate_json_response(response)
+            if validated_response:
+                validated_response["_model_used"] = "ollama-local"
+                return validated_response
+                
+        # 4. Final safety fallback
+        log.error("❌ All LLM providers failed. Returning graceful error dictionary.")
+        err_res = self._get_error_response(user_question)
+        err_res["_model_used"] = "error-fallback"
+        return err_res
 
     def _build_analysis_prompt(
         self,

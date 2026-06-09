@@ -45,6 +45,8 @@ import os
 import uuid
 import json
 import logging
+import time
+import numpy as np
 from typing import Optional, Dict, Any, Callable
 
 log = logging.getLogger(__name__)
@@ -129,8 +131,18 @@ class AnalysisPipeline:
             "embedding_id": None,
         }
 
+        latencies = {
+            "preprocessing": 0.0,
+            "segmentation": 0.0,
+            "ocr": 0.0,
+            "embedding": 0.0,
+            "classification": 0.0,
+            "llm": 0.0
+        }
+
         try:
             # ─── Stage 1: OpenCV Preprocessing ────────────────────────────────
+            t_preprocessing = time.time()
             await report("preprocessing", 10, "Cleaning and preprocessing image...")
             
             preprocessed = preprocessor.preprocess(image_bytes)
@@ -139,8 +151,10 @@ class AnalysisPipeline:
             binary = preprocessed["binary"]
             
             log.info(f"Preprocessing complete: {len(contours)} raw contours found")
+            latencies["preprocessing"] = time.time() - t_preprocessing
 
             # ─── Stage 2: SAM Segmentation ─────────────────────────────────────
+            t_segmentation = time.time()
             await report("segmentation", 25, f"Segmenting diagram elements...")
             
             img_np = preprocessed["preprocessed"]
@@ -155,8 +169,10 @@ class AnalysisPipeline:
             
             await report("segmentation", 35, 
                         f"Found {len(boxes)} nodes, {len(arrows)} arrows, {len(text_regions)} text regions")
+            latencies["segmentation"] = time.time() - t_segmentation
 
             # ─── Stage 3: TrOCR Text Extraction ───────────────────────────────
+            t_ocr = time.time()
             await report("ocr", 40, "Extracting text with TrOCR...")
             
             # Batch process: collect all PIL image crops
@@ -203,23 +219,31 @@ class AnalysisPipeline:
             result["ocr_text"] = ocr_text
             
             await report("ocr", 50, f"OCR complete: '{ocr_text[:80]}...' " if len(ocr_text) > 80 else f"OCR: '{ocr_text}'")
+            latencies["ocr"] = time.time() - t_ocr
 
-            # ─── Stage 4: Diagram Type Classification ─────────────────────────
-            await report("classification", 55, "Classifying diagram type...")
-            
-            diagram_type = self._classify_diagram_type(elements, ocr_text, 
-                                                         len(arrows), len(boxes))
-            result["diagram_type"] = diagram_type
-            
-            await report("classification", 60, f"Diagram type: {diagram_type}")
-
-            # ─── Stage 5: DINOv2 Embedding Generation ─────────────────────────
-            await report("embedding", 65, "Generating semantic embedding with DINOv2...")
+            # ─── Stage 4: DINOv2 Embedding Generation ─────────────────────────
+            t_embedding = time.time()
+            await report("embedding", 55, "Generating semantic embedding with DINOv2...")
             
             embedding = dinov2_service.generate_embedding(pil_image)
+            latencies["embedding"] = time.time() - t_embedding
+
+            # ─── Stage 5: Diagram Type Classification (PyTorch Model) ─────────
+            t_classification = time.time()
+            await report("classification", 65, "Classifying diagram type with ML Classifier Head...")
             
-            # ─── Stage 6: Qdrant — Search Similar Diagrams ────────────────────
-            await report("vector_search", 70, "Searching for similar diagrams...")
+            diagram_type, class_confidence, low_confidence = self._classify_diagram_type(
+                embedding, elements, ocr_text, len(arrows), len(boxes)
+            )
+            result["diagram_type"] = diagram_type
+            result["confidence"] = class_confidence
+            result["low_confidence"] = low_confidence
+            
+            await report("classification", 70, f"Diagram type: {diagram_type} (conf: {class_confidence:.2f}, low_conf: {low_confidence})")
+            latencies["classification"] = time.time() - t_classification
+
+            # ─── Stage 6: Vector Similarity Search ────────────────────────────
+            await report("vector_search", 73, "Searching for similar diagrams in vector database...")
             
             similar_diagrams = vector_service.search_similar(
                 query_embedding=embedding,
@@ -242,7 +266,7 @@ class AnalysisPipeline:
             result["embedding_id"] = embedding_id
             
             # ─── Stage 8: Attention Heatmap (async, non-blocking) ─────────────
-            await report("attention", 75, "Generating attention heatmap...")
+            await report("attention", 78, "Generating attention heatmap...")
             
             try:
                 attn_map = dinov2_service.generate_attention_map(pil_image)
@@ -254,7 +278,8 @@ class AnalysisPipeline:
                 log.warning(f"Attention map generation failed: {e}")
 
             # ─── Stage 9: LLM Reasoning ───────────────────────────────────────
-            await report("llm_analysis", 80, "Analyzing with AI (LLM reasoning)...")
+            t_llm = time.time()
+            await report("llm_analysis", 82, "Analyzing with AI (LLM reasoning)...")
             
             # Run LLM call with timeout (don't wait forever for external API)
             try:
@@ -267,7 +292,7 @@ class AnalysisPipeline:
                         user_question=user_question,
                         target_language=target_language,
                     ),
-                    timeout=60.0  # 60 second timeout for LLM
+                    timeout=60.0
                 )
             except asyncio.TimeoutError:
                 log.warning("LLM call timed out — using placeholder")
@@ -281,23 +306,33 @@ class AnalysisPipeline:
                 "summary": llm_result.get("summary", ""),
                 "relationships": llm_result.get("relationships", []),
                 "model_used": llm_result.get("_model_used", "unknown"),
-                "confidence": llm_result.get("confidence", 0.8),
+                "confidence": llm_result.get("confidence", class_confidence),
                 "algorithm_pattern": llm_result.get("algorithm_or_pattern"),
                 "complexity": llm_result.get("complexity", {}),
             })
             
-            # Update Qdrant with LLM-enriched metadata
+            # Update vector database metadata with enriched results
             vector_service.store_embedding(
                 upload_id=upload_id,
                 embedding=embedding,
                 metadata={
                     "diagram_type": llm_result.get("diagram_type_confirmed", diagram_type),
                     "ocr_text": ocr_text,
-                    "explanation": result["explanation"][:500],  # Truncate for storage
+                    "explanation": result["explanation"][:500],
                     "session_id": session_id,
                     "file_path": f"{settings.UPLOAD_DIR}/{upload_id}.png",
                 }
             )
+            
+            latencies["llm"] = time.time() - t_llm
+            
+            # Calculate cost (GPT-4o standard pricing: $5.00/M input, $15.00/M output tokens)
+            prompt_est = len(str(elements) + ocr_text + str(similar_diagrams)) // 4
+            completion_est = len(str(llm_result)) // 4
+            estimated_cost = (prompt_est * 0.000005) + (completion_est * 0.000015)
+            
+            result["latencies"] = latencies
+            result["estimated_cost"] = estimated_cost
             
             await report("complete", 100, "Analysis complete! ✅")
             
@@ -310,50 +345,73 @@ class AnalysisPipeline:
 
     def _classify_diagram_type(
         self,
+        embedding: np.ndarray,
+        elements: list,
+        ocr_text: str,
+        arrow_count: int,
+        box_count: int,
+    ) -> tuple[str, float, bool]:
+        """
+        Classify diagram using the trained DiagramClassifierHead model on top of DINOv2 embeddings.
+        Includes confidence calibration against class prototype centroids.
+        """
+        import os
+        import torch
+        
+        try:
+            from models.classifier_head import diagram_classifier
+            
+            # Predict category and softmax confidence
+            category, confidence = diagram_classifier.predict(embedding)
+            
+            # Confidence Calibration using average centroid similarity
+            low_confidence = False
+            prototypes_path = "/Users/hemanthreddy/Desktop/Multimodal Whiteboard Intelligence System/backend/models/class_prototypes.pt"
+            
+            if os.path.exists(prototypes_path):
+                class_prototypes = torch.load(prototypes_path, map_location="cpu", weights_only=False)
+                if category in class_prototypes:
+                    centroid = class_prototypes[category]
+                    sim = float(np.dot(embedding, centroid))
+                    log.info(f"Calibration sim for {category}: {sim:.3f} (confidence: {confidence:.3f})")
+                    
+                    # Flag low confidence if similarity to class prototype is low or prediction is weak
+                    if sim < 0.70 or confidence < 0.60:
+                        low_confidence = True
+            else:
+                log.warning("Class prototypes not found; using prediction confidence only.")
+                if confidence < 0.60:
+                    low_confidence = True
+                    
+            return category, confidence, low_confidence
+            
+        except Exception as e:
+            log.error(f"Failed to run ML classification: {e}. Falling back to rules.")
+            category = self._classify_diagram_type_rules(elements, ocr_text, arrow_count, box_count)
+            return category, 0.75, False
+
+    def _classify_diagram_type_rules(
+        self,
         elements: list,
         ocr_text: str,
         arrow_count: int,
         box_count: int,
     ) -> str:
-        """
-        Rule-based diagram type classification.
-        
-        In a production system, you'd train a classifier.
-        Here we use simple heuristics + keyword matching.
-        
-        RULES:
-        - Flowchart: has arrows + boxes + keywords like Start/End/Decision
-        - DSA: keywords like array/tree/node/left/right/sorted
-        - Architecture: keywords like server/client/database/API/microservice
-        - ER Diagram: keywords like entity/attribute/relationship/primary key
-        - Class Diagram: keywords like class/method/interface/extends/implements
-        - Math/Formula: lots of numbers and symbols, few arrows
-        """
+        """Rule-based diagram type classification fallback."""
         ocr_lower = ocr_text.lower()
-        
-        # DSA keywords
         dsa_keywords = ["tree", "node", "left", "right", "root", "leaf", 
                         "array", "stack", "queue", "heap", "graph", "sort",
                         "search", "binary", "linked", "null", "pointer"]
-        
-        # Flowchart keywords  
         flow_keywords = ["start", "end", "begin", "stop", "yes", "no",
                          "decision", "process", "input", "output", "loop"]
-        
-        # Architecture keywords
         arch_keywords = ["server", "client", "database", "api", "service",
                          "microservice", "load balancer", "cache", "cdn",
                          "frontend", "backend", "gateway", "queue"]
-        
-        # ER diagram keywords
         er_keywords = ["entity", "attribute", "relationship", "primary",
                        "foreign", "key", "table", "schema", "record"]
-        
-        # UML keywords
         uml_keywords = ["class", "method", "interface", "extends", "implements",
                         "abstract", "public", "private", "constructor"]
         
-        # Count keyword matches
         scores = {
             "dsa": sum(1 for k in dsa_keywords if k in ocr_lower),
             "flowchart": sum(1 for k in flow_keywords if k in ocr_lower),
@@ -361,22 +419,15 @@ class AnalysisPipeline:
             "er_diagram": sum(1 for k in er_keywords if k in ocr_lower),
             "class_diagram": sum(1 for k in uml_keywords if k in ocr_lower),
         }
-        
-        # Structural rules (override keyword scores in some cases)
         if arrow_count > 5 and box_count > 3:
-            scores["flowchart"] += 3  # High arrow+box count → likely flowchart
-        
+            scores["flowchart"] += 3
         if arrow_count == 0 and box_count > 5:
-            scores["er_diagram"] += 2  # Many boxes, no arrows → ER diagram
-        
-        # Find winner
+            scores["er_diagram"] += 2
+            
         best_type = max(scores, key=scores.get)
-        
-        # Only use classification if there's clear evidence
         if scores[best_type] >= 2:
             return best_type
-        
-        # Fall back to structural inference
+            
         if arrow_count > 3:
             return "flowchart"
         if box_count > 5:

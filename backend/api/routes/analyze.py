@@ -258,6 +258,55 @@ async def run_analysis_background(
             progress_callback=progress_callback,
         )
         
+        # Save telemetry and analysis results back to the database
+        try:
+            from core.database import AsyncSessionLocal
+            from models.schemas import DiagramUpload, GeneratedCode
+            
+            async with AsyncSessionLocal() as session:
+                stmt = select(DiagramUpload).where(DiagramUpload.id == upload_id)
+                db_result = await session.execute(stmt)
+                upload = db_result.scalar_one_or_none()
+                
+                if upload:
+                    upload.diagram_type = result.get("diagram_type", "unknown")
+                    upload.ocr_text = result.get("ocr_text", "")
+                    upload.elements_json = result.get("elements", [])
+                    upload.confidence_score = result.get("confidence", 0.0)
+                    
+                    # Latencies
+                    latencies = result.get("latencies", {})
+                    upload.latency_preprocessing = latencies.get("preprocessing", 0.0)
+                    upload.latency_segmentation = latencies.get("segmentation", 0.0)
+                    upload.latency_ocr = latencies.get("ocr", 0.0)
+                    upload.latency_embedding = latencies.get("embedding", 0.0)
+                    upload.latency_classification = latencies.get("classification", 0.0)
+                    upload.latency_llm = latencies.get("llm", 0.0)
+                    
+                    # Estimated cost & low confidence flag
+                    upload.estimated_cost = result.get("estimated_cost", 0.0)
+                    upload.low_confidence = result.get("low_confidence", False)
+                    
+                    # Save generated code to generated_codes table if available
+                    generated_code = result.get("generated_code")
+                    if generated_code:
+                        code_record = GeneratedCode(
+                            id=uuid.uuid4(),
+                            upload_id=upload.id,
+                            language=target_language,
+                            code_content=generated_code,
+                            explanation=result.get("code_explanation", ""),
+                            llm_model_used=result.get("model_used", "unknown"),
+                        )
+                        session.add(code_record)
+                        
+                    await session.commit()
+                    log.info(f"💾 Successfully saved telemetry and results for upload {upload_id[:8]} to database.")
+                else:
+                    log.warning(f"⚠️ DiagramUpload record {upload_id[:8]} not found in database; could not save telemetry.")
+        except Exception as db_err:
+            log.error(f"❌ Failed to save analysis result to database: {db_err}")
+        
         # Send final result via WebSocket
         await manager.send_result(job_id=upload_id, result=result)
         

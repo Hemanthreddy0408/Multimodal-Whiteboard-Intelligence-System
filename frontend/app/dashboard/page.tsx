@@ -89,10 +89,10 @@ export default function DashboardPage() {
   };
 
   const stats = [
-    { label: "Total Analyses", val: totalAnalyses, sub: "all time", icon: Cpu,          color: "#8b5cf6", trend: "+3 this week",    trendUp: true },
-    { label: "This Month",     val: monthAnalyses,  sub: "billing cycle",  icon: Activity,      color: "#22d3ee", trend: "+2 this week",    trendUp: true },
-    { label: "Top Language",   val: getMostUsedLang(), sub: "auto-detected", icon: Terminal,      color: "#f59e0b", trend: "Most used",        trendUp: null },
-    { label: "Avg Confidence", val: `${getAvgConfidence()}%`, sub: "DINOv2 model",  icon: CheckCircle2,  color: "#10b981", trend: "High accuracy",    trendUp: true },
+    { label: "Total Analyses", val: totalAnalyses, sub: "all time", icon: Cpu,          color: "var(--violet)", id: "violet", trend: "+3 this week",    trendUp: true },
+    { label: "This Month",     val: monthAnalyses,  sub: "billing cycle",  icon: Activity,      color: "var(--indigo)", id: "indigo", trend: "+2 this week",    trendUp: true },
+    { label: "Top Language",   val: getMostUsedLang(), sub: "auto-detected", icon: Terminal,      color: "var(--amber)",  id: "amber",  trend: "Most used",        trendUp: null },
+    { label: "Avg Confidence", val: `${getAvgConfidence()}%`, sub: "DINOv2 model",  icon: CheckCircle2,  color: "var(--cyan)",   id: "cyan",   trend: "High accuracy",    trendUp: true },
   ];
 
   return (
@@ -181,39 +181,40 @@ export default function DashboardPage() {
             {stats.map((stat, i) => (
               <div
                 key={i}
-                className="stat-card p-5 rounded-2xl space-y-3 cursor-default"
+                className="stat-card p-6 rounded-2xl flex flex-col justify-between min-h-[125px] cursor-default transition-all duration-300 hover:scale-[1.01]"
                 style={{
-                  background: "rgba(12,12,26,0.7)",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  background: "var(--bg-2)",
+                  border: "1px solid var(--card-border)",
                   backdropFilter: "blur(12px)",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
                   animation: `slide-up 0.4s cubic-bezier(0.34,1.56,0.64,1) ${0.05 + i * 0.07}s both`,
                 }}
               >
                 <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "#475569" }}>
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-3)" }}>
                     {stat.label}
                   </span>
                   <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ background: `${stat.color}15`, border: `1px solid ${stat.color}25` }}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{
+                      background: `rgba(var(--${stat.id}-rgb), 0.12)`,
+                      border: `1px solid rgba(var(--${stat.id}-rgb), 0.22)`,
+                    }}
                   >
                     <stat.icon size={13} style={{ color: stat.color }} />
                   </div>
                 </div>
-                <div>
-                  <p
-                    className="text-2xl font-black tracking-tight count-up"
-                    style={{ color: "#f1f5f9" }}
-                  >
+                <div className="mt-2">
+                  <p className="text-2xl font-black tracking-tight count-up text-theme-primary leading-none">
                     {stat.val}
                   </p>
-                  <p className="text-[9px] mt-1 font-semibold" style={{ color: "#334155" }}>{stat.sub}</p>
+                  <p className="text-[10px] mt-1 font-semibold" style={{ color: "var(--text-3)" }}>{stat.sub}</p>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 mt-2">
                   {stat.trendUp !== null && (
-                    <TrendingUp size={9} style={{ color: stat.trendUp ? "#10b981" : "#f87171" }} />
+                    <TrendingUp size={9} style={{ color: stat.trendUp ? "var(--emerald)" : "var(--red)" }} />
                   )}
-                  <span className="text-[9px] font-bold" style={{ color: stat.trendUp ? "#10b981" : stat.trendUp === false ? "#f87171" : "#64748b" }}>
+                  <span className="text-[9px] font-bold" style={{ color: stat.trendUp ? "var(--emerald)" : stat.trendUp === false ? "var(--red)" : "var(--text-3)" }}>
                     {stat.trend}
                   </span>
                 </div>

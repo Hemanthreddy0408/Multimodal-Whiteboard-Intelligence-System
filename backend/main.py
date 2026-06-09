@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 
 from core.config import settings
 from core.database import init_db, init_qdrant
-from api.routes import analyze, sessions, chat, search, health, websocket_router
+from api.routes import analyze, sessions, chat, search, health, websocket_router, gist
 
 import logging
 logging.basicConfig(
@@ -107,6 +107,7 @@ app.include_router(sessions.router, prefix="/api/sessions", tags=["Sessions"])
 app.include_router(analyze.router, prefix="/api", tags=["Analysis"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(search.router, prefix="/api/search", tags=["Search"])
+app.include_router(gist.router, prefix="/api/gist", tags=["Gist"])
 app.include_router(websocket_router.router, tags=["WebSocket"])
 
 

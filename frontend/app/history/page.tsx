@@ -122,10 +122,10 @@ export default function HistoryPage() {
   };
 
   const stats = [
-    { label: "Total Sessions", val: totalSessions, sub: "all time", icon: Database, color: "var(--violet)" },
-    { label: "This Month", val: thisMonthCount, sub: "billing cycle", icon: Calendar, color: "var(--indigo)" },
-    { label: "Top Language", val: getMostUsedLang(), sub: "auto-detected", icon: BookOpen, color: "var(--amber)" },
-    { label: "Avg Confidence", val: `${getAvgConfidence()}%`, sub: "OCR/DINOv2 model", icon: HelpCircle, color: "var(--cyan)" }
+    { label: "Total Sessions", val: totalSessions, sub: "all time", icon: Database, color: "var(--violet)", id: "violet" },
+    { label: "This Month", val: thisMonthCount, sub: "billing cycle", icon: Calendar, color: "var(--indigo)", id: "indigo" },
+    { label: "Top Language", val: getMostUsedLang(), sub: "auto-detected", icon: BookOpen, color: "var(--amber)", id: "amber" },
+    { label: "Avg Confidence", val: `${getAvgConfidence()}%`, sub: "OCR/DINOv2 model", icon: HelpCircle, color: "var(--cyan)", id: "cyan" }
   ];
 
   return (
@@ -207,30 +207,34 @@ export default function HistoryPage() {
             {stats.map((stat, i) => (
               <div
                 key={i}
-                className="p-5 rounded-2xl space-y-3 cursor-default"
+                className="p-6 rounded-2xl flex flex-col justify-between min-h-[115px] cursor-default transition-all duration-300 hover:scale-[1.01]"
                 style={{
-                  background: "rgba(12,12,26,0.7)",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  background: "var(--bg-2)",
+                  border: "1px solid var(--card-border)",
                   backdropFilter: "blur(12px)",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
                   animation: `slide-up 0.4s cubic-bezier(0.34,1.56,0.64,1) ${0.05 + i * 0.07}s both`,
                 }}
               >
                 <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-theme-muted">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-theme-secondary">
                     {stat.label}
                   </span>
                   <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ background: `${stat.color}15`, border: `1px solid ${stat.color}25` }}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{
+                      background: `rgba(var(--${stat.id}-rgb), 0.12)`,
+                      border: `1px solid rgba(var(--${stat.id}-rgb), 0.22)`,
+                    }}
                   >
                     <stat.icon size={13} style={{ color: stat.color }} />
                   </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="text-xl font-black tracking-tight text-theme-primary block">
+                <div className="space-y-1 mt-3">
+                  <span className="text-2xl font-black tracking-tight text-theme-primary block leading-none">
                     {stat.val}
                   </span>
-                  <span className="text-[10px] text-theme-muted block font-medium">
+                  <span className="text-[10px] text-theme-muted block font-semibold">
                     {stat.sub}
                   </span>
                 </div>
@@ -242,8 +246,8 @@ export default function HistoryPage() {
           <div 
             className="border border-theme rounded-2xl overflow-hidden shadow-xl slide-up"
             style={{
-              background: "rgba(12,12,26,0.7)",
-              border: "1px solid rgba(255,255,255,0.06)",
+              background: "var(--bg-2)",
+              border: "1px solid var(--card-border)",
               backdropFilter: "blur(12px)",
               animationDelay: "0.2s"
             }}
@@ -270,7 +274,7 @@ export default function HistoryPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-white/5 border-b border-theme">
+                    <tr className="border-b border-theme bg-theme-card/30">
                       <th className="px-5 py-4 font-bold text-theme-secondary uppercase tracking-wider text-[9px]">Capture</th>
                       <th className="px-5 py-4 font-bold text-theme-secondary uppercase tracking-wider text-[9px]">Detected Type</th>
                       <th className="px-5 py-4 font-bold text-theme-secondary uppercase tracking-wider text-[9px]">OCR Text Extracted</th>
@@ -284,7 +288,7 @@ export default function HistoryPage() {
                     {paginatedItems.map((item) => {
                       const style = getBadgeStyle(item.diagram_type);
                       return (
-                        <tr key={item.inference_id} className="hover:bg-white/5 transition-all">
+                        <tr key={item.inference_id} className="hover:bg-theme-card/40 transition-all">
                           <td className="px-5 py-4">
                             <div className="w-10 h-10 rounded-lg border border-theme bg-theme-bg overflow-hidden flex items-center justify-center font-bold text-lg select-none relative">
                               {item.thumbnail_url ? (
@@ -310,24 +314,24 @@ export default function HistoryPage() {
                               {item.diagram_type || "general"}
                             </span>
                           </td>
-                          <td className="px-5 py-4 text-slate-300 max-w-[200px] truncate" title={item.ocr_text}>
+                          <td className="px-5 py-4 text-theme-secondary max-w-[200px] truncate" title={item.ocr_text}>
                             {item.ocr_text || <span className="text-theme-muted italic">No handwritten labels detected</span>}
                           </td>
                           <td className="px-5 py-4">
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-white/5 border border-theme text-slate-300 capitalize">
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-theme-card border border-theme text-theme-secondary capitalize">
                               {(item.languages && item.languages[0]) || "python"}
                             </span>
                           </td>
                           <td className={`px-5 py-4 font-bold ${getConfidenceColor(item.confidence || 0.85)}`}>
                             {Math.round((item.confidence || 0.85) * 100)}%
                           </td>
-                          <td className="px-5 py-4 text-slate-400 font-medium" title={mounted ? new Date(item.created_at || item.timestamp).toString() : ""}>
+                          <td className="px-5 py-4 text-theme-muted font-medium" title={mounted ? new Date(item.created_at || item.timestamp).toString() : ""}>
                             {mounted ? new Date(item.created_at || item.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
                           </td>
                           <td className="px-5 py-4 text-right space-x-2">
                             <Link 
                               href={`/?restore=${item.inference_id}`}
-                              className="btn border border-theme bg-white/5 hover:bg-white/10 px-3 py-1.5 text-[10px] font-bold rounded-lg inline-flex items-center gap-1 transition-all"
+                              className="btn border border-theme bg-theme-card hover:bg-theme-panel px-3 py-1.5 text-[10px] font-bold rounded-lg inline-flex items-center gap-1 transition-all text-theme-secondary hover:text-theme-primary"
                             >
                               Load Workspace <ExternalLink size={10} />
                             </Link>

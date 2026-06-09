@@ -48,6 +48,9 @@ export interface AnalysisResult {
   complexity?: Complexity;
   language?: string;
   error?: string;
+  latencies?: Record<string, number>;
+  estimated_cost?: number;
+  low_confidence?: boolean;
 }
 
 export interface PipelineProgress {

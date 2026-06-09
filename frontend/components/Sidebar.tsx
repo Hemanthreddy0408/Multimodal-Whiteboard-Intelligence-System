@@ -45,10 +45,10 @@ export default function Sidebar() {
   const initials = userName.split(" ").map((n: string) => n[0]).join("").toUpperCase();
 
   const items = [
-    { label: "Dashboard",  href: "/dashboard", icon: LayoutDashboard, color: "#8b5cf6" },
-    { label: "Workspace",  href: "/",           icon: Cpu,             color: "#22d3ee" },
-    { label: "History",    href: "/history",    icon: History,          color: "#10b981" },
-    { label: "Settings",   href: "/settings",   icon: Settings,         color: "#f59e0b" },
+    { label: "Dashboard",  href: "/dashboard", icon: LayoutDashboard, color: "var(--violet)", id: "violet" },
+    { label: "Workspace",  href: "/",           icon: Cpu,             color: "var(--indigo)", id: "indigo" },
+    { label: "History",    href: "/history",    icon: History,          color: "var(--emerald)", id: "emerald" },
+    { label: "Settings",   href: "/settings",   icon: Settings,         color: "var(--amber)", id: "amber" },
   ];
 
   const isActive = (path: string) => pathname === path;
@@ -57,8 +57,8 @@ export default function Sidebar() {
     <aside
       className="w-60 border-r flex flex-col h-full flex-shrink-0 z-30 relative"
       style={{
-        background: "rgba(6,6,17,0.7)",
-        borderColor: "rgba(255,255,255,0.06)",
+        background: "var(--bg-2)",
+        borderColor: "var(--card-border)",
         backdropFilter: "blur(20px)",
       }}
     >
@@ -71,40 +71,40 @@ export default function Sidebar() {
       {/* User Profile Section */}
       <div
         className="p-4 flex items-center gap-3 relative overflow-hidden"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+        style={{ borderBottom: "1px solid var(--card-border)" }}
       >
         {/* Subtle glow behind avatar */}
         <div
           className="absolute inset-0 opacity-30"
-          style={{ background: "radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.15), transparent 70%)" }}
+          style={{ background: "radial-gradient(ellipse at 20% 50%, rgba(var(--violet-rgb), 0.15), transparent 70%)" }}
         />
 
         {/* Avatar */}
         <div
           className="relative w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
           style={{
-            background: "linear-gradient(135deg, #7c3aed, #6366f1, #22d3ee)",
+            background: "linear-gradient(135deg, var(--violet), var(--indigo), var(--cyan))",
             backgroundSize: "200%",
             animation: "gradient-shift 5s ease infinite",
-            boxShadow: "0 4px 16px rgba(124,58,237,0.4)",
+            boxShadow: "0 4px 16px rgba(var(--violet-rgb), 0.4)",
           }}
         >
           {initials}
           {/* Online indicator */}
           <span
             className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 flex items-center justify-center"
-            style={{ background: "#10b981", borderColor: "rgba(6,6,17,0.9)" }}
+            style={{ background: "var(--emerald)", borderColor: "var(--bg-2)" }}
           />
         </div>
 
         <div className="min-w-0 relative z-10">
-          <p className="text-xs font-bold text-white truncate leading-tight">{userName}</p>
+          <p className="text-xs font-bold text-theme-primary truncate leading-tight">{userName}</p>
           <span
             className="inline-flex items-center gap-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full mt-1 uppercase tracking-wider"
             style={
               userPlan === "free"
-                ? { background: "rgba(255,255,255,0.06)", color: "#64748b", border: "1px solid rgba(255,255,255,0.08)" }
-                : { background: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)" }
+                ? { background: "var(--card)", color: "var(--text-2)", border: "1px solid var(--card-border)" }
+                : { background: "rgba(var(--amber-rgb), 0.15)", color: "var(--amber)", border: "1px solid rgba(var(--amber-rgb), 0.3)" }
             }
           >
             {userPlan !== "free" && <Zap size={7} className="fill-current" />}
@@ -118,7 +118,7 @@ export default function Sidebar() {
         {/* Section Label */}
         <p
           className="text-[9px] font-extrabold uppercase tracking-widest px-3 mb-3 mt-1"
-          style={{ color: "rgba(100,116,139,0.6)" }}
+          style={{ color: "var(--text-3)" }}
         >
           Navigation
         </p>
@@ -131,10 +131,10 @@ export default function Sidebar() {
               href={item.href}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide relative overflow-hidden group"
               style={{
-                color: active ? item.color : "rgba(100,116,139,0.9)",
-                background: active ? `${item.color}15` : "transparent",
-                border: `1px solid ${active ? `${item.color}25` : "transparent"}`,
-                boxShadow: active ? `0 2px 16px ${item.color}18` : "none",
+                color: active ? item.color : "var(--text-3)",
+                background: active ? `rgba(var(--${item.id}-rgb), 0.08)` : "transparent",
+                border: `1px solid ${active ? `rgba(var(--${item.id}-rgb), 0.18)` : "transparent"}`,
+                boxShadow: active ? `0 2px 16px rgba(var(--${item.id}-rgb), 0.08)` : "none",
                 transform: mounted ? "translateX(0)" : "translateX(-8px)",
                 opacity: mounted ? 1 : 0,
                 transition: `all 0.2s ease ${i * 0.05}s`,
@@ -144,7 +144,7 @@ export default function Sidebar() {
               {active && (
                 <span
                   className="absolute left-0 top-[20%] bottom-[20%] w-0.5 rounded-r"
-                  style={{ background: item.color, boxShadow: `0 0 8px ${item.color}` }}
+                  style={{ background: item.color, boxShadow: `0 0 8px rgba(var(--${item.id}-rgb), 0.8)` }}
                 />
               )}
 
@@ -152,8 +152,8 @@ export default function Sidebar() {
               <span
                 className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200"
                 style={{
-                  background: active ? `${item.color}22` : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${active ? `${item.color}30` : "rgba(255,255,255,0.06)"}`,
+                  background: active ? `rgba(var(--${item.id}-rgb), 0.15)` : "var(--card)",
+                  border: `1px solid ${active ? `rgba(var(--${item.id}-rgb), 0.25)` : "var(--card-border)"}`,
                   color: active ? item.color : "inherit",
                 }}
               >
@@ -166,7 +166,7 @@ export default function Sidebar() {
               {!active && (
                 <span
                   className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  style={{ background: "rgba(255,255,255,0.03)" }}
+                  style={{ background: "var(--card-hover)" }}
                 />
               )}
             </Link>
@@ -179,15 +179,15 @@ export default function Sidebar() {
             href="/pricing"
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold relative overflow-hidden group mt-4"
             style={{
-              background: "linear-gradient(135deg, rgba(245,158,11,0.1), rgba(234,88,12,0.08))",
-              border: "1px solid rgba(245,158,11,0.22)",
-              color: "#fbbf24",
+              background: "linear-gradient(135deg, rgba(var(--amber-rgb), 0.1), rgba(var(--amber-rgb), 0.05))",
+              border: "1px solid rgba(var(--amber-rgb), 0.22)",
+              color: "var(--amber)",
               transition: "all 0.2s ease",
             }}
           >
             <span
               className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.25)" }}
+              style={{ background: "rgba(var(--amber-rgb), 0.15)", border: "1px solid rgba(var(--amber-rgb), 0.25)" }}
             >
               <Zap size={13} className="fill-current" />
             </span>
@@ -197,7 +197,7 @@ export default function Sidebar() {
             <span
               className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{
-                background: "linear-gradient(90deg, transparent, rgba(245,158,11,0.08), transparent)",
+                background: "linear-gradient(90deg, transparent, rgba(var(--amber-rgb), 0.08), transparent)",
               }}
             />
           </Link>
@@ -207,18 +207,18 @@ export default function Sidebar() {
       {/* Usage Meter */}
       <div
         className="p-4 space-y-3"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
+        style={{ borderTop: "1px solid var(--card-border)" }}
       >
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-[10px] font-bold" style={{ color: "#64748b" }}>
-            <BarChart2 size={11} style={{ color: "#8b5cf6" }} />
+          <span className="flex items-center gap-1.5 text-[10px] font-bold" style={{ color: "var(--text-3)" }}>
+            <BarChart2 size={11} style={{ color: "var(--violet)" }} />
             Monthly Usage
           </span>
           <span className="text-[10px] font-bold" style={{ color: "var(--violet)" }}>{usage}/{limit === 99999 ? "∞" : limit}</span>
         </div>
 
         {/* Animated progress */}
-        <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
+        <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: "var(--card)" }}>
           <div
             className="h-full rounded-full relative overflow-hidden"
             style={{

@@ -5,6 +5,12 @@ All environment variables are validated at startup.
 from pydantic_settings import BaseSettings
 from typing import List
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env explicitly to ensure HF_ENDPOINT is set in the OS environment
+load_dotenv()
+if "HF_ENDPOINT" in os.environ:
+    os.environ["HF_ENDPOINT"] = os.environ["HF_ENDPOINT"]
 
 class Settings(BaseSettings):
     # App
@@ -34,6 +40,7 @@ class Settings(BaseSettings):
     SAM_MODEL_TYPE: str = "vit_h"
     TROCR_MODEL: str = "microsoft/trocr-large-handwritten"
     DINOV2_MODEL: str = "facebook/dinov2-large"
+    HF_ENDPOINT: str = "https://huggingface.co"
 
     # Storage
     UPLOAD_DIR: str = "./uploads"

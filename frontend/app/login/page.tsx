@@ -70,8 +70,8 @@ export default function LoginPage() {
       <div 
         className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 relative overflow-hidden z-10"
         style={{
-          background: "linear-gradient(135deg, rgba(12,12,26,0.85), rgba(20,14,40,0.75))",
-          borderRight: "1px solid rgba(255,255,255,0.06)",
+          background: "linear-gradient(135deg, var(--bg-3), var(--bg-2))",
+          borderRight: "1px solid var(--card-border)",
           backdropFilter: "blur(20px)"
         }}
       >
@@ -93,8 +93,8 @@ export default function LoginPage() {
           <div 
             className="relative w-72 h-48 mx-auto border rounded-2xl p-6 flex flex-col justify-between items-center shadow-inner"
             style={{
-              background: "rgba(12,12,26,0.6)",
-              borderColor: "rgba(255,255,255,0.05)",
+              background: "var(--bg-3)",
+              borderColor: "var(--card-border)",
             }}
           >
             <div className="flex justify-between w-full">
@@ -121,10 +121,10 @@ export default function LoginPage() {
         <div 
           className="w-full max-w-sm space-y-6 p-8 rounded-2xl shadow-2xl relative z-10 slide-up"
           style={{
-            background: "rgba(12,12,26,0.75)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "var(--bg-2)",
+            border: "1px solid var(--card-border)",
             backdropFilter: "blur(16px)",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(139,92,246,0.05)"
+            boxShadow: "0 10px 40px rgba(0,0,0,0.05), 0 0 0 1px rgba(var(--violet-rgb), 0.05)"
           }}
         >
           <div className="text-center space-y-1">
@@ -137,7 +137,7 @@ export default function LoginPage() {
             <button 
               type="button"
               onClick={() => socialLogin("google")}
-              className="flex items-center justify-center gap-1.5 border border-theme bg-white/5 hover:bg-white/10 py-2.5 rounded-xl text-xs font-semibold text-theme-primary transition-all cursor-pointer"
+              className="flex items-center justify-center gap-1.5 border border-theme bg-theme-card hover:bg-theme-panel py-2.5 rounded-xl text-xs font-semibold text-theme-primary transition-all cursor-pointer"
             >
               <svg className="w-3.5 h-3.5 mr-0.5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -206,7 +206,7 @@ export default function LoginPage() {
             <button 
               type="submit"
               disabled={loading}
-              className="btn bg-[#7C3AED] hover:brightness-110 text-white font-bold text-xs py-2.5 rounded-xl w-full flex items-center justify-center gap-1.5 shadow-lg shadow-[#7C3AED]/20 mt-6 cursor-pointer transition-all"
+              className="btn bg-gradient-to-tr from-[var(--indigo)] to-[var(--violet)] text-black w-full py-2.5 rounded-xl flex items-center justify-center gap-1 shadow-lg shadow-cyan-500/10 cursor-pointer transition-all"
             >
               {loading ? <Loader2 size={13} className="spin" /> : "Sign in"}
             </button>

@@ -81,7 +81,7 @@ class SAMSegmentationService:
             # min_mask_region_area=100 → ignore tiny regions (noise)
             self.mask_generator = SamAutomaticMaskGenerator(
                 model=self.model,
-                points_per_side=32,
+                points_per_side=8,
                 pred_iou_thresh=0.88,
                 stability_score_thresh=0.95,
                 crop_n_layers=1,

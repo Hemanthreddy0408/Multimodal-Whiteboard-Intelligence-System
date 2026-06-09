@@ -107,9 +107,23 @@ class TrOCRService:
             if pil_image.mode != "RGB":
                 pil_image = pil_image.convert("RGB")
             
-            # Skip tiny images (< 10×10) — likely noise
+            # Skip tiny images (<10×10) — likely noise
             if pil_image.width < 10 or pil_image.height < 10:
                 return ""
+            
+            # ── Preprocessing fix: upscale small images so TrOCR can read text ──
+            # TrOCR is trained on images where text is legible (~32px+ height).
+            # Tiny crops cause the model to hallucinate single characters like 'G'.
+            MIN_HEIGHT = 64
+            if pil_image.height < MIN_HEIGHT:
+                scale = MIN_HEIGHT / pil_image.height
+                new_w = max(1, int(pil_image.width * scale))
+                pil_image = pil_image.resize((new_w, MIN_HEIGHT), Image.LANCZOS)
+            
+            # Boost contrast on low-contrast images (whiteboard / synthetic drawings)
+            from PIL import ImageEnhance
+            enhancer = ImageEnhance.Contrast(pil_image)
+            pil_image = enhancer.enhance(2.0)   # 2x contrast
             
             # Preprocess: resize, normalize, convert to tensor
             pixel_values = self.processor(
@@ -118,12 +132,14 @@ class TrOCRService:
             ).pixel_values.to(self.device)
             
             # Generate text tokens (beam search decoding)
+            # max_new_tokens=128 to avoid premature termination (which causes 'G' output)
             with torch.no_grad():
                 generated_ids = self.handwritten_model.generate(
                     pixel_values,
-                    max_length=64,          # Max tokens to generate
-                    num_beams=4,            # Beam search width (higher = more accurate, slower)
+                    max_new_tokens=128,         # Use max_new_tokens (not max_length)
+                    num_beams=4,                # Beam search width
                     early_stopping=True,
+                    no_repeat_ngram_size=3,     # Prevent repetitive outputs
                 )
             
             # Decode token IDs back to text string
@@ -134,6 +150,12 @@ class TrOCRService:
             
             # Clean up whitespace
             text = text.strip()
+            
+            # Filter out single-character degenerate outputs
+            if len(text) <= 1:
+                log.debug(f"TrOCR degenerate output '{text}' — returning empty string")
+                return ""
+            
             log.debug(f"📝 OCR result: '{text}'")
             return text
             

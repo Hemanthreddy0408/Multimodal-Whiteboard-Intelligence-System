@@ -64,21 +64,57 @@ class VectorService:
     - get_by_id(): Retrieve a specific embedding by ID
     """
     
+    # DINOv2-small produces 384-dim embeddings; DINOv2-large → 1024-dim.
+    # We default to 384 to match the dinov2-small model configured in .env.
+    EMBEDDING_DIM = 384
+
     def __init__(self):
         self._client = None
+        self._collection_ready = False
 
     def _get_client(self):
-        """Lazy-load Qdrant client."""
+        """Lazy-load Qdrant client and ensure collection exists with correct dims."""
         if self._client:
             return self._client
         try:
             from qdrant_client import QdrantClient
+            from qdrant_client.models import VectorParams, Distance
             from core.config import settings
             self._client = QdrantClient(
                 host=settings.QDRANT_HOST,
                 port=settings.QDRANT_PORT,
                 timeout=10
             )
+            # Ensure the collection exists with the correct vector dimension
+            col_name = self._get_collection_name()
+            existing = [c.name for c in self._client.get_collections().collections]
+            if col_name not in existing:
+                self._client.create_collection(
+                    collection_name=col_name,
+                    vectors_config=VectorParams(
+                        size=self.EMBEDDING_DIM,
+                        distance=Distance.COSINE
+                    ),
+                )
+                log.info(f"✅ Created Qdrant collection '{col_name}' with dim={self.EMBEDDING_DIM}")
+            else:
+                # Verify the existing collection has the right dimension
+                info = self._client.get_collection(col_name)
+                existing_dim = info.config.params.vectors.size
+                if existing_dim != self.EMBEDDING_DIM:
+                    log.warning(
+                        f"⚠️  Qdrant collection '{col_name}' has dim={existing_dim} "
+                        f"but we need dim={self.EMBEDDING_DIM}. Recreating..."
+                    )
+                    self._client.delete_collection(col_name)
+                    self._client.create_collection(
+                        collection_name=col_name,
+                        vectors_config=VectorParams(
+                            size=self.EMBEDDING_DIM,
+                            distance=Distance.COSINE
+                        ),
+                    )
+                    log.info(f"✅ Recreated Qdrant collection '{col_name}' with dim={self.EMBEDDING_DIM}")
         except Exception as e:
             log.warning(f"⚠️  Qdrant not available: {e}")
         return self._client
@@ -90,68 +126,73 @@ class VectorService:
         metadata: Dict[str, Any],
     ) -> str:
         """
-        Store a diagram embedding in Qdrant.
-        
-        Each Qdrant "point" contains:
-        - id: unique identifier (we use upload_id)
-        - vector: the 1024-dim float array from DINOv2
-        - payload: metadata dict (searchable + filterable)
-        
-        PAYLOAD FIELDS WE STORE:
-        - diagram_type: "flowchart", "dsa", "architecture", etc.
-        - ocr_text: extracted text content
-        - session_id: which session this belongs to
-        - user_id: owner
-        - explanation: AI-generated explanation
-        - file_path: where the image is stored
-        - created_at: timestamp
-        
-        This allows hybrid search: vector similarity + metadata filters
-        Example: "Find similar flowcharts FROM THIS USER created AFTER last week"
-        
-        Args:
-            upload_id: UUID of the upload record in PostgreSQL
-            embedding: 1024-dim numpy array from DINOv2
-            metadata: dict of searchable metadata
-            
-        Returns:
-            The Qdrant point ID (same as upload_id)
+        Store a diagram embedding in Qdrant, with a fallback to PostgreSQL pgvector.
         """
-        client = self._get_client()
-        if not client:
-            log.warning("Qdrant unavailable — skipping embedding storage")
-            return upload_id
-        
+        # Ensure point_id is a valid UUID or integer for Qdrant
         try:
-            from qdrant_client.models import PointStruct
+            point_id = str(uuid.UUID(upload_id))
+        except ValueError:
+            # Deterministic UUID fallback
+            point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, upload_id))
+
+        qdrant_success = False
+        client = self._get_client()
+        if client:
+            try:
+                from qdrant_client.models import PointStruct
+                
+                vector = embedding.tolist()
+                point = PointStruct(
+                    id=point_id,
+                    vector=vector,
+                    payload={
+                        **metadata,
+                        "embedding_dim": len(vector),
+                    }
+                )
+                client.upsert(
+                    collection_name=self._get_collection_name(),
+                    points=[point],
+                    wait=True
+                )
+                log.info(f"📦 Stored embedding in Qdrant for upload {upload_id[:8]}...")
+                qdrant_success = True
+            except Exception as e:
+                log.warning(f"⚠️  Qdrant store failed: {e}. Falling back to pgvector...")
+        
+        # Always store in PostgreSQL as primary/fallback record
+        try:
+            from sqlalchemy import create_engine, text
             from core.config import settings
             
-            # Convert to plain Python list (Qdrant doesn't accept numpy)
-            vector = embedding.tolist()
+            sync_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+            sync_engine = create_engine(sync_url)
+            vector_str = "[" + ",".join(map(str, embedding.tolist())) + "]"
             
-            # Create the point
-            point = PointStruct(
-                id=upload_id,  # Use upload_id as Qdrant point ID
-                vector=vector,
-                payload={
-                    **metadata,
-                    "embedding_dim": len(vector),
-                }
-            )
-            
-            # Upsert (insert or update if already exists)
-            client.upsert(
-                collection_name=self._get_collection_name(),
-                points=[point],
-                wait=True  # Wait for indexing to complete
-            )
-            
-            log.info(f"📦 Stored embedding for upload {upload_id[:8]}...")
-            return upload_id
-            
+            with sync_engine.begin() as conn:
+                try:
+                    conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+                except Exception:
+                    pass  # Might not have superuser privileges, ignore
+                
+                sql = text("""
+                    UPDATE diagram_uploads
+                    SET embedding_vector = :vector_str,
+                        diagram_type = :diagram_type,
+                        ocr_text = :ocr_text
+                    WHERE id = :upload_id;
+                """)
+                conn.execute(sql, {
+                    "vector_str": vector_str,
+                    "diagram_type": metadata.get("diagram_type", "unknown"),
+                    "ocr_text": metadata.get("ocr_text", ""),
+                    "upload_id": upload_id
+                })
+                log.info(f"💾 Stored embedding in PostgreSQL for upload {upload_id[:8]}...")
         except Exception as e:
-            log.error(f"❌ Qdrant storage error: {e}")
-            return upload_id
+            log.error(f"❌ PostgreSQL store embedding error: {e}")
+            
+        return upload_id
 
     def search_similar(
         self,
@@ -161,77 +202,88 @@ class VectorService:
         score_threshold: float = 0.3,
     ) -> List[Dict]:
         """
-        Find the N most similar diagrams to a query embedding.
-        
-        HOW THE SEARCH WORKS:
-        1. query_embedding: 1024-dim vector of the new diagram
-        2. Qdrant computes cosine similarity against ALL stored embeddings
-        3. Uses HNSW index to find approximate nearest neighbors (fast!)
-        4. Returns top N results with similarity scores
-        
-        FILTERING:
-        Qdrant supports filtering by payload fields DURING vector search.
-        This is called "filtered vector search" or "hybrid search."
-        
-        Example filter: "Only search diagrams of type 'flowchart'"
-        {
-            "must": [
-                {"key": "diagram_type", "match": {"value": "flowchart"}}
-            ]
-        }
-        
-        Args:
-            query_embedding: 1024-dim query vector
-            limit: max results to return
-            filters: Qdrant filter dict (optional)
-            score_threshold: minimum similarity score (0-1)
-            
-        Returns:
-            List of dicts: [{id, score, payload}, ...]
+        Find the N most similar diagrams, checking Qdrant first, and pgvector as fallback.
         """
         client = self._get_client()
-        if not client:
-            return []
+        if client:
+            try:
+                from qdrant_client.models import Filter, FieldCondition, MatchValue, QueryRequest
+                
+                qdrant_filter = None
+                if filters:
+                    conditions = [
+                        FieldCondition(key=k, match=MatchValue(value=v))
+                        for k, v in filters.items()
+                    ]
+                    qdrant_filter = Filter(must=conditions)
+                
+                # qdrant-client ≥1.7: use query_points() instead of deprecated search()
+                response = client.query_points(
+                    collection_name=self._get_collection_name(),
+                    query=query_embedding.tolist(),
+                    limit=limit,
+                    query_filter=qdrant_filter,
+                    score_threshold=score_threshold,
+                    with_payload=True,
+                    with_vectors=False,
+                )
+                hits = response.points
+                
+                formatted = [
+                    {
+                        "id": str(hit.id),
+                        "score": float(hit.score),
+                        "diagram_type": hit.payload.get("diagram_type", "unknown"),
+                        "ocr_text": hit.payload.get("ocr_text", ""),
+                        "explanation": hit.payload.get("explanation", ""),
+                        "file_path": hit.payload.get("file_path", ""),
+                        "session_id": hit.payload.get("session_id", ""),
+                    }
+                    for hit in hits
+                ]
+                
+                log.info(f"🔍 Found {len(formatted)} similar diagrams in Qdrant")
+                return formatted
+            except Exception as e:
+                log.warning(f"⚠️  Qdrant search failed: {e}. Falling back to pgvector...")
         
+        # Fallback to pgvector search in PostgreSQL
         try:
-            from qdrant_client.models import Filter, FieldCondition, MatchValue
+            from sqlalchemy import create_engine, text
+            from core.config import settings
             
-            qdrant_filter = None
-            if filters:
-                conditions = []
-                for key, value in filters.items():
-                    conditions.append(
-                        FieldCondition(key=key, match=MatchValue(value=value))
-                    )
-                qdrant_filter = Filter(must=conditions)
+            sync_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+            sync_engine = create_engine(sync_url)
+            query_vector_str = "[" + ",".join(map(str, query_embedding.tolist())) + "]"
             
-            results = client.search(
-                collection_name=self._get_collection_name(),
-                query_vector=query_embedding.tolist(),
-                limit=limit,
-                query_filter=qdrant_filter,
-                score_threshold=score_threshold,
-                with_payload=True,   # Return metadata with results
-                with_vectors=False,  # Don't return raw vectors (save bandwidth)
-            )
-            
-            formatted = []
-            for hit in results:
-                formatted.append({
-                    "id": str(hit.id),
-                    "score": float(hit.score),
-                    "diagram_type": hit.payload.get("diagram_type", "unknown"),
-                    "ocr_text": hit.payload.get("ocr_text", ""),
-                    "explanation": hit.payload.get("explanation", ""),
-                    "file_path": hit.payload.get("file_path", ""),
-                    "session_id": hit.payload.get("session_id", ""),
-                })
-            
-            log.info(f"🔍 Found {len(formatted)} similar diagrams")
-            return formatted
-            
-        except Exception as e:
-            log.error(f"❌ Qdrant search error: {e}")
+            with sync_engine.connect() as conn:
+                sql = text("""
+                    SELECT id, diagram_type, ocr_text, file_path, session_id,
+                           (1.0 - (CAST(embedding_vector AS vector) <=> CAST(:query_vector AS vector))) as similarity
+                    FROM diagram_uploads
+                    WHERE embedding_vector IS NOT NULL
+                    ORDER BY CAST(embedding_vector AS vector) <=> CAST(:query_vector AS vector) ASC
+                    LIMIT :limit;
+                """)
+                res = conn.execute(sql, {"query_vector": query_vector_str, "limit": limit})
+                
+                formatted = []
+                for row in res:
+                    similarity = float(row[5])
+                    if similarity >= score_threshold:
+                        formatted.append({
+                            "id": str(row[0]),
+                            "score": similarity,
+                            "diagram_type": row[1] or "unknown",
+                            "ocr_text": row[2] or "",
+                            "explanation": "Retrieved via pgvector similarity search.",
+                            "file_path": row[3] or "",
+                            "session_id": str(row[4]) if row[4] else "",
+                        })
+                log.info(f"🔍 Found {len(formatted)} similar diagrams in PostgreSQL pgvector")
+                return formatted
+        except Exception as pg_err:
+            log.error(f"❌ PostgreSQL pgvector search error: {pg_err}")
             return []
 
     def search_by_text(self, text_query: str, limit: int = 5) -> List[Dict]:

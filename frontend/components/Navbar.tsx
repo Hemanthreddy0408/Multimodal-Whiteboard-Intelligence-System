@@ -98,12 +98,12 @@ export default function Navbar() {
       className="sticky top-0 z-50 w-full transition-all duration-300"
       style={{
         background: scrolled
-          ? "rgba(6,6,17,0.85)"
-          : "rgba(6,6,17,0.6)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+          ? "var(--bg-2)"
+          : "transparent",
+        borderBottom: scrolled ? "1px solid var(--card-border)" : "1px solid transparent",
         backdropFilter: "blur(20px) saturate(180%)",
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        boxShadow: scrolled ? "0 8px 32px rgba(0,0,0,0.4)" : "none",
+        boxShadow: scrolled ? "0 8px 32px rgba(0,0,0,0.06)" : "none",
       }}
     >
       {/* Animated top edge line */}
@@ -146,12 +146,12 @@ export default function Navbar() {
             </div>
             <span
               className="font-black text-sm tracking-tight"
-              style={{ color: "#f1f5f9" }}
+              style={{ color: "var(--text-1)" }}
             >
               Whiteboard
               <span
                 style={{
-                  background: "linear-gradient(90deg, #818cf8, #22d3ee)",
+                  background: "linear-gradient(90deg, var(--indigo), var(--cyan))",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
@@ -171,8 +171,8 @@ export default function Navbar() {
                   href={l.href}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all relative group"
                   style={{
-                    color: isActive(l.href) ? "#a78bfa" : "#64748b",
-                    background: isActive(l.href) ? "rgba(139,92,246,0.12)" : "transparent",
+                    color: isActive(l.href) ? "var(--violet)" : "var(--text-3)",
+                    background: isActive(l.href) ? "rgba(var(--violet-rgb), 0.1)" : "transparent",
                   }}
                 >
                   <l.icon size={12} />
@@ -180,13 +180,13 @@ export default function Navbar() {
                   {isActive(l.href) && (
                     <span
                       className="absolute bottom-0 left-3 right-3 h-px rounded-full"
-                      style={{ background: "linear-gradient(90deg, #8b5cf6, #22d3ee)" }}
+                      style={{ background: "linear-gradient(90deg, var(--violet), var(--cyan))" }}
                     />
                   )}
                   {/* Hover bg */}
                   <span
                     className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: "rgba(255,255,255,0.04)" }}
+                    style={{ background: "var(--card-hover)" }}
                   />
                 </Link>
               ))
@@ -195,8 +195,8 @@ export default function Navbar() {
                 <Link
                   key={l.href}
                   href={l.href}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:text-white"
-                  style={{ color: "#64748b" }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:text-[var(--text-1)]"
+                  style={{ color: "var(--text-3)" }}
                 >
                   {l.label}
                 </Link>
@@ -212,8 +212,8 @@ export default function Navbar() {
                 <div
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold"
                   style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.07)",
+                    background: "var(--card)",
+                    border: "1px solid var(--card-border)",
                     color: "var(--text-2)",
                   }}
                 >
@@ -226,9 +226,9 @@ export default function Navbar() {
                   onClick={toggleTheme}
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95"
                   style={{
-                    color: "#64748b",
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.06)",
+                    color: "var(--text-3)",
+                    background: "var(--card)",
+                    border: "1px solid var(--card-border)",
                   }}
                   aria-label="Toggle theme"
                 >
@@ -239,15 +239,15 @@ export default function Navbar() {
                 <button
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-all relative hover:scale-110 active:scale-95"
                   style={{
-                    color: "#64748b",
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.06)",
+                    color: "var(--text-3)",
+                    background: "var(--card)",
+                    border: "1px solid var(--card-border)",
                   }}
                 >
                   <Bell size={14} />
                   <span
                     className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-                    style={{ background: "#22d3ee", boxShadow: "0 0 6px rgba(34,211,238,0.8)" }}
+                    style={{ background: "var(--cyan)", boxShadow: "0 0 6px var(--cyan)" }}
                   />
                 </button>
 
@@ -256,13 +256,13 @@ export default function Navbar() {
                   <button
                     onClick={() => setUserDropdownOpen((p) => !p)}
                     className="flex items-center gap-2 p-1 rounded-xl transition-all hover:scale-105 active:scale-95"
-                    style={{ border: "1px solid rgba(255,255,255,0.06)" }}
+                    style={{ border: "1px solid var(--card-border)" }}
                   >
                     <div
                       className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white"
                       style={{
-                        background: "linear-gradient(135deg, #7c3aed, #6366f1)",
-                        boxShadow: "0 2px 10px rgba(124,58,237,0.4)",
+                        background: "linear-gradient(135deg, var(--violet), var(--indigo))",
+                        boxShadow: "0 2px 10px rgba(var(--violet-rgb), 0.3)",
                       }}
                     >
                       {initials}
@@ -270,7 +270,7 @@ export default function Navbar() {
                     <ChevronDown
                       size={11}
                       style={{
-                        color: "#64748b",
+                        color: "var(--text-3)",
                         transform: userDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
                         transition: "transform 0.2s ease",
                       }}
@@ -282,19 +282,19 @@ export default function Navbar() {
                     <div
                       className="absolute right-0 mt-2 w-56 rounded-2xl p-1 shadow-2xl scale-in"
                       style={{
-                        background: "rgba(10,10,20,0.95)",
-                        border: "1px solid rgba(255,255,255,0.08)",
+                        background: "var(--bg-2)",
+                        border: "1px solid var(--card-border)",
                         backdropFilter: "blur(20px)",
-                        boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.1)",
+                        boxShadow: "0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(var(--violet-rgb), 0.05)",
                       }}
                     >
                       {/* User info */}
                       <div
                         className="px-3 py-2.5 mb-1 rounded-xl"
-                        style={{ background: "rgba(255,255,255,0.03)" }}
+                        style={{ background: "var(--card)" }}
                       >
-                        <p className="text-xs font-bold text-white">{session?.user?.name || "User"}</p>
-                        <p className="text-[10px] mt-0.5 truncate" style={{ color: "#64748b" }}>{session?.user?.email || ""}</p>
+                        <p className="text-xs font-bold text-theme-primary">{session?.user?.name || "User"}</p>
+                        <p className="text-[10px] mt-0.5 truncate" style={{ color: "var(--text-3)" }}>{session?.user?.email || ""}</p>
                       </div>
 
                       <div className="space-y-0.5 p-0.5">
@@ -308,22 +308,22 @@ export default function Navbar() {
                             href={item.href}
                             onClick={() => setUserDropdownOpen(false)}
                             className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs font-semibold transition-all group"
-                            style={{ color: "#94a3b8" }}
+                            style={{ color: "var(--text-2)" }}
                           >
-                            <span className="flex items-center gap-2 group-hover:text-white transition-colors">
+                            <span className="flex items-center gap-2 group-hover:text-theme-primary transition-colors">
                               <item.icon size={12} />
                               {item.label}
                             </span>
-                            <span className="text-[9px] font-mono" style={{ color: "#334155" }}>{item.key}</span>
+                            <span className="text-[9px] font-mono text-theme-muted">{item.key}</span>
                           </Link>
                         ))}
                       </div>
 
-                      <div className="mt-1 p-0.5" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                      <div className="mt-1 p-0.5" style={{ borderTop: "1px solid var(--card-border)" }}>
                         <button
                           onClick={() => { setUserDropdownOpen(false); signOut({ callbackUrl: "/landing" }); }}
                           className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:bg-red-500/10"
-                          style={{ color: "#f87171" }}
+                          style={{ color: "var(--red)" }}
                         >
                           <LogOut size={12} />
                           Sign out
@@ -335,26 +335,29 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex items-center gap-2">
-                <button onClick={toggleTheme} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "#64748b", background: "rgba(255,255,255,0.04)" }}>
+                <button 
+                  onClick={toggleTheme} 
+                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95" 
+                  style={{ color: "var(--text-3)", background: "var(--card)", border: "1px solid var(--card-border)" }}
+                >
                   {theme === "light" ? <Moon size={14} /> : <Sun size={14} />}
                 </button>
                 <Link
                   href="/login"
-                  className="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all hover:text-white"
+                  className="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all hover:text-[var(--text-1)] border border-theme"
                   style={{
-                    color: "#94a3b8",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    background: "rgba(255,255,255,0.03)",
+                    color: "var(--text-2)",
+                    background: "var(--card)",
                   }}
                 >
                   Log in
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-1.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 active:scale-95"
+                  className="px-4 py-1.5 rounded-xl text-xs font-bold text-black transition-all hover:scale-105 active:scale-95"
                   style={{
-                    background: "linear-gradient(135deg, #7c3aed, #8b5cf6)",
-                    boxShadow: "0 4px 16px rgba(124,58,237,0.4)",
+                    background: "linear-gradient(135deg, var(--indigo), var(--violet))",
+                    boxShadow: "0 4px 16px rgba(var(--indigo-rgb), 0.3)",
                   }}
                 >
                   Get Started
@@ -365,8 +368,8 @@ export default function Navbar() {
 
           {/* Hamburger */}
           <button
-            className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ color: "#64748b", background: "rgba(255,255,255,0.04)" }}
+            className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105"
+            style={{ color: "var(--text-3)", background: "var(--card)", border: "1px solid var(--card-border)" }}
             onClick={() => setMobileMenuOpen((p) => !p)}
           >
             {mobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
@@ -379,8 +382,8 @@ export default function Navbar() {
         <div
           className="md:hidden px-4 py-4 space-y-2 slide-up"
           style={{
-            borderTop: "1px solid rgba(255,255,255,0.05)",
-            background: "rgba(6,6,17,0.95)",
+            borderTop: "1px solid var(--card-border)",
+            background: "var(--bg-2)",
           }}
         >
           {status === "authenticated" ? (
@@ -391,8 +394,8 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all"
                 style={{
-                  color: isActive(l.href) ? "#a78bfa" : "#64748b",
-                  background: isActive(l.href) ? "rgba(139,92,246,0.1)" : "transparent",
+                  color: isActive(l.href) ? "var(--violet)" : "var(--text-3)",
+                  background: isActive(l.href) ? "rgba(var(--violet-rgb), 0.1)" : "transparent",
                 }}
               >
                 <l.icon size={14} />
@@ -405,15 +408,15 @@ export default function Navbar() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 text-sm font-semibold"
-                style={{ color: "#64748b" }}
+                className="block px-3 py-2 text-sm font-semibold transition-colors hover:text-[var(--text-1)]"
+                style={{ color: "var(--text-3)" }}
               >
                 {l.label}
               </Link>
             ))
           )}
 
-          <div className="pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          <div className="pt-3" style={{ borderTop: "1px solid var(--card-border)" }}>
             {status === "authenticated" ? (
               <button
                 onClick={() => { setMobileMenuOpen(false); signOut({ callbackUrl: "/landing" }); }}

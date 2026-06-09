@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Code2, FileText, Layers, Search, Database, Copy, Check, Loader2, ArrowRight, Eye, EyeOff, Cpu, Zap } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Code2, FileText, Layers, Search, Database, Copy, Check, Loader2, ArrowRight, Eye, EyeOff, Cpu, Zap, Share2, History, ExternalLink } from "lucide-react";
 import { AnalysisResult, PipelineProgress } from "@/types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-type Tab = "explain" | "code" | "elements" | "similar" | "json";
+type Tab = "explain" | "code" | "elements" | "similar" | "json" | "diff";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "explain",  label: "Explain",  icon: "💡" },
   { id: "code",     label: "Code",     icon: "🖥️" },
+  { id: "diff",     label: "Diff",     icon: "🔄" },
   { id: "elements", label: "Elements", icon: "🧩" },
   { id: "similar",  label: "Similar",  icon: "🔍" },
   { id: "json",     label: "JSON",     icon: "{ }" },
@@ -27,11 +28,54 @@ export default function AnalysisPanel({ result, progress, analyzing, previewUrl 
   const [tab, setTab] = useState<Tab>("explain");
   const [copied, setCopied] = useState(false);
   const [showAttn, setShowAttn] = useState(false);
+  
+  const [previousCode, setPreviousCode] = useState<string | null>(null);
+  const [lastCode, setLastCode] = useState<string | null>(null);
+  const [exportingGist, setExportingGist] = useState(false);
+  const [gistUrl, setGistUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (result?.generated_code) {
+      if (lastCode && lastCode !== result.generated_code) {
+        setPreviousCode(lastCode);
+      }
+      setLastCode(result.generated_code);
+    }
+  }, [result?.generated_code, lastCode]);
 
   const copy = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleExportGist = async () => {
+    if (!result?.generated_code) return;
+    setExportingGist(true);
+    try {
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+      const res = await fetch(`${BACKEND}/api/gist/export`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: result.generated_code,
+          filename: `generated_${result.diagram_type || "code"}.py`,
+          description: `Generated ${result.diagram_type} code from Multimodal Whiteboard Intelligence System`
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGistUrl(data.gist_url);
+        window.open(data.gist_url, "_blank");
+      } else {
+        alert("Failed to export Gist");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to export Gist: backend connection issue");
+    } finally {
+      setExportingGist(false);
+    }
   };
 
   // ── Empty state ──────────────────────────────────────────────────────────
@@ -283,10 +327,26 @@ export default function AnalysisPanel({ result, progress, analyzing, previewUrl 
                           </div>
                           <span className="text-xs font-medium" style={{ color: "var(--text-3)", fontFamily: "monospace" }}>generated.py</span>
                         </div>
-                        <button onClick={() => copy(result.generated_code!)}
-                          className="btn btn-ghost text-xs px-2 py-1 gap-1" style={{ borderRadius: "var(--r-sm)" }}>
-                          {copied ? <><Check size={11} /> Copied!</> : <><Copy size={11} /> Copy</>}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button onClick={handleExportGist} disabled={exportingGist}
+                            className="btn btn-ghost text-xs px-2 py-1 gap-1 flex items-center" style={{ borderRadius: "var(--r-sm)" }}>
+                            {exportingGist ? (
+                              <><Loader2 size={11} className="spin animate-spin" /> Exporting...</>
+                            ) : gistUrl ? (
+                              <span className="flex items-center gap-1 text-emerald-400">
+                                <Check size={11} /> Exported
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <Share2 size={11} /> Export Gist
+                              </span>
+                            )}
+                          </button>
+                          <button onClick={() => copy(result.generated_code!)}
+                            className="btn btn-ghost text-xs px-2 py-1 gap-1" style={{ borderRadius: "var(--r-sm)" }}>
+                            {copied ? <><Check size={11} /> Copied!</> : <><Copy size={11} /> Copy</>}
+                          </button>
+                        </div>
                       </div>
                       <div className="overflow-x-auto text-[13px] bg-[#0d1117]/60">
                         <SyntaxHighlighter
@@ -394,9 +454,109 @@ export default function AnalysisPanel({ result, progress, analyzing, previewUrl 
                 </pre>
               </div>
             )}
+
+            {/* ── Diff tab ── */}
+            {tab === "diff" && (
+              <div className="space-y-4 slide-up">
+                {previousCode && result.generated_code ? (
+                  <div className="code-wrap">
+                    <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                      <span className="text-xs font-semibold text-indigo-400">Code Version Comparison (Diff)</span>
+                      <span className="text-[10px] text-slate-400">Green (+) = Added, Red (-) = Removed</span>
+                    </div>
+                    <div className="overflow-x-auto text-[12px] p-4 bg-[#0d1117]/80 font-mono leading-relaxed max-h-[500px]">
+                      {computeSimpleDiff(previousCode, result.generated_code).map((line, idx) => (
+                        <div key={idx} className={`px-2 py-0.5 rounded flex ${
+                          line.type === "added" ? "bg-emerald-950/40 text-emerald-300 border-l-2 border-emerald-500" :
+                          line.type === "removed" ? "bg-rose-950/40 text-rose-300 border-l-2 border-rose-500 line-through" :
+                          "text-slate-300"
+                        }`}>
+                          <span className="w-6 select-none opacity-30 text-right pr-2">
+                            {line.type === "added" ? "+" : line.type === "removed" ? "-" : " "}
+                          </span>
+                          <span className="whitespace-pre">{line.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <History size={40} className="text-slate-500 mb-3" />
+                    <p className="text-xs text-slate-400 max-w-xs">
+                      No previous versions detected. Use the chat to request a code modification or language translation to view diffs.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
+
+      {/* Telemetry HUD Footer */}
+      {result && (
+        <div className="px-4 py-2.5 border-t border-white/5 bg-black/40 text-[10px] text-slate-400 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 font-semibold">
+            <Cpu size={12} className="text-indigo-400" />
+            <span>Telemetry:</span>
+            {result.latencies && (
+              <span className="flex flex-wrap gap-x-2.5 gap-y-1">
+                <span>CV Pre: <strong className="text-slate-200">{(result.latencies.preprocessing ?? 0).toFixed(2)}s</strong></span>
+                <span>SAM Seg: <strong className="text-slate-200">{(result.latencies.segmentation ?? 0).toFixed(2)}s</strong></span>
+                <span>TrOCR: <strong className="text-slate-200">{(result.latencies.ocr ?? 0).toFixed(2)}s</strong></span>
+                <span>DINOv2: <strong className="text-slate-200">{(result.latencies.embedding ?? 0).toFixed(2)}s</strong></span>
+                <span>ML Class: <strong className="text-slate-200">{(result.latencies.classification ?? 0).toFixed(2)}s</strong></span>
+                {result.latencies.llm !== undefined && (
+                  <span>LLM: <strong className="text-slate-200">{(result.latencies.llm ?? 0).toFixed(2)}s</strong></span>
+                )}
+              </span>
+            )}
+          </div>
+          {result.estimated_cost !== undefined && (
+            <div className="flex items-center gap-1 font-semibold text-emerald-400">
+              <Zap size={11} />
+              <span>Cost: <strong>${(result.estimated_cost ?? 0).toFixed(5)}</strong></span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
+
+const computeSimpleDiff = (oldStr: string, newStr: string) => {
+  const oldLines = oldStr.split("\n");
+  const newLines = newStr.split("\n");
+  const diff: { type: "added" | "removed" | "unchanged"; text: string }[] = [];
+  
+  let i = 0, j = 0;
+  while (i < oldLines.length || j < newLines.length) {
+    if (i < oldLines.length && j < newLines.length) {
+      if (oldLines[i] === newLines[j]) {
+        diff.push({ type: "unchanged", text: oldLines[i] });
+        i++;
+        j++;
+      } else {
+        if (i + 1 < oldLines.length && oldLines[i + 1] === newLines[j]) {
+          diff.push({ type: "removed", text: oldLines[i] });
+          i++;
+        } else if (j + 1 < newLines.length && oldLines[i] === newLines[j + 1]) {
+          diff.push({ type: "added", text: newLines[j] });
+          j++;
+        } else {
+          diff.push({ type: "removed", text: oldLines[i] });
+          diff.push({ type: "added", text: newLines[j] });
+          i++;
+          j++;
+        }
+      }
+    } else if (i < oldLines.length) {
+      diff.push({ type: "removed", text: oldLines[i] });
+      i++;
+    } else {
+      diff.push({ type: "added", text: newLines[j] });
+      j++;
+    }
+  }
+  return diff;
+};
